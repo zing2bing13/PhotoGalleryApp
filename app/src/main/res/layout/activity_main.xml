@@ -12,65 +12,84 @@
         android:layout_height="33dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Left"
+        android:text="@string/button_left"
+        android:textAlignment="center"
+        android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="69dp"
+        android:layout_width="72dp"
         android:layout_height="33dp"
+        android:layout_marginStart="84dp"
         android:layout_marginTop="16dp"
-        android:text="Search"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="181dp" />
+        android:text="@string/button_search"
+        android:textAlignment="center"
+        android:textSize="12sp"
+        app:layout_constraintStart_toEndOf="@+id/button"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button3"
         android:layout_width="69dp"
         android:layout_height="33dp"
+        android:layout_marginStart="84dp"
         android:layout_marginTop="16dp"
-        android:text="Right"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="339dp" />
+        android:layout_marginEnd="16dp"
+        android:text="@string/button_right"
+        android:textAlignment="center"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button2"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Snap"
+        android:text="@string/button_snap"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="387dp"
-        android:layout_height="482dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="379dp"
+        android:layout_height="358dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/button4"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editText"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="timestamp"
-        tools:layout_editor_absoluteX="55dp"
-        tools:layout_editor_absoluteY="79dp" />
+        android:layout_width="0dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="160dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="160dp"
+        android:text="@string/text_timestamp"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button2" />
 
     <EditText
         android:id="@+id/editText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="120dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Caption"
+        android:text="@string/edit_caption"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:layout_editor_absoluteY="65dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 </androidx.constraintlayout.widget.ConstraintLayout>
