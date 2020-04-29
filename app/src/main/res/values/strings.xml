@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Assignment1</string>
+    <string name="button_left">Left</string>
+    <string name="button_right">Right</string>
+    <string name="button_snap">SNAP!</string>
+    <string name="button_search">Search</string>
+    <string name="edit_caption">Caption</string>
+    <string name="text_timestamp">Timestamp</string>
+    <string name="search_hint_startDate">Start Date</string>
+    <string name="search_hint_endDate">End Date</string>
+    <string name="search_hint_time">Time</string>
 </resources>
