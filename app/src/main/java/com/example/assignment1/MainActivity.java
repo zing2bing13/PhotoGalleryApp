@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
     private ImageView imageView;
-    private TextView currentImageCaption;
+    private EditText currentImageCaption;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +36,20 @@ public class MainActivity extends AppCompatActivity {
 
         //set layout components
         this.imageView = (ImageView)this.findViewById(R.id.imageView);
-        this.currentImageCaption = (TextView)this.findViewById(R.id.imageCaption);
-        Button snapButton = (Button)this.findViewById(R.id.snapButton);
+        this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
+        ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
 
+        //empty default image caption when focusing
+        currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(hasFocus == true){
+                    if(currentImageCaption.getText().toString().compareTo("TIMESTAMP")==0){
+                        currentImageCaption.setText("");
+                    }
+                }
+            }
+        });
         //set carma open function
         snapButton.setOnClickListener(new View.OnClickListener()
         {
