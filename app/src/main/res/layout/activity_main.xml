@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/button_left"
         android:layout_width="68dp"
         android:layout_height="33dp"
         android:layout_marginStart="16dp"
@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/button_search"
         android:layout_width="72dp"
         android:layout_height="33dp"
         android:layout_marginStart="84dp"
@@ -27,11 +27,11 @@
         android:text="@string/button_search"
         android:textAlignment="center"
         android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/button"
+        app:layout_constraintStart_toEndOf="@+id/button_left"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/button_right"
         android:layout_width="69dp"
         android:layout_height="33dp"
         android:layout_marginStart="84dp"
@@ -41,11 +41,11 @@
         android:textAlignment="center"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button2"
+        app:layout_constraintStart_toEndOf="@+id/button_search"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button4"
+        android:id="@+id/button_snap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
@@ -59,14 +59,14 @@
         android:layout_width="379dp"
         android:layout_height="358dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/button4"
+        app:layout_constraintBottom_toTopOf="@+id/button_snap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText"
+        app:layout_constraintTop_toBottomOf="@+id/editText_caption"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_timestamp"
         android:layout_width="0dp"
         android:layout_height="19dp"
         android:layout_marginStart="160dp"
@@ -76,10 +76,10 @@
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+        app:layout_constraintTop_toBottomOf="@+id/button_search" />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/editText_caption"
         android:layout_width="0dp"
         android:layout_height="45dp"
         android:layout_marginStart="120dp"
@@ -91,5 +91,5 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/textView_timestamp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
