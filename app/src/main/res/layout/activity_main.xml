@@ -24,6 +24,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="13dp"
         android:background="@null"
+        android:onClick="onSearchClick"
         android:text="@string/button_search"
         android:textAlignment="center"
         android:textColor="@color/colorPrimary"

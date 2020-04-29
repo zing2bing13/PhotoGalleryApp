@@ -108,4 +108,11 @@ public class MainActivity extends AppCompatActivity {
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss").format(new Date());
         currentImageCaption.setText(timeStamp);
     }
+
+    // Called when the user taps the Search button
+    public void onSearchClick(View view) {
+        Intent intent = new Intent(this, SearchActivity.class);
+        startActivity(intent);
+    }
+
 }
