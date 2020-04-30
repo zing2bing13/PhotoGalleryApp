@@ -2,13 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/searchActivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SearchActivity">
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/backButton"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginStart="16dp"
@@ -27,7 +26,7 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/button"
+        app:layout_constraintStart_toEndOf="@+id/backButton"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
@@ -39,6 +38,9 @@
         android:ems="10"
         android:hint="@string/search_hint_startDate"
         android:inputType="date"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="onStartDateClick"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
@@ -53,6 +55,9 @@
         android:ems="10"
         android:hint="@string/search_hint_time"
         android:inputType="time"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="onStartTimeClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/startDate"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
@@ -67,6 +72,9 @@
         android:ems="10"
         android:hint="@string/search_hint_endDate"
         android:inputType="date"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="onEndDateClick"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startDate"
         android:importantForAutofill="no" />
@@ -81,6 +89,9 @@
         android:ems="10"
         android:hint="@string/search_hint_time"
         android:inputType="time"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="onEndTimeClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/endDate"
         app:layout_constraintTop_toBottomOf="@+id/startTime"
