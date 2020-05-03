@@ -3,12 +3,17 @@ package com.example.assignment1;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,22 +25,42 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
-    private ImageView imageView;
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
+    private ArrayList<String> photoFilePaths = new ArrayList<String>();
+    private ImageView image;
     private EditText currentImageCaption;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+        } else {
+            photoFilePaths = getFilePaths(this);
+        }
+
         //set layout components
-        this.imageView = (ImageView)this.findViewById(R.id.imageView);
+        image = (ImageView) findViewById(R.id.imageView);
+        try {
+                image.setImageBitmap(decodeSampledBitmap(photoFilePaths.get(0), 379, 358));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
         ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
 
@@ -76,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Check camera permission result
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -88,6 +114,22 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
             }
         }
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                photoFilePaths = getFilePaths(this);
+                image = (ImageView) findViewById(R.id.imageView);
+                try {
+                    image.setImageBitmap(decodeSampledBitmap(photoFilePaths.get(0), 379, 358));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                // Permission Denied
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     //Return the encoded photo as a small bitmap under the key "data"
@@ -97,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+            image.setImageBitmap(imageBitmap);
             //add timestamp
             getTimeStamp();
         }
@@ -115,4 +157,62 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    // Loading large bitmaps efficiently
+    private int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+                final int height = options.outHeight;
+                final int width = options.outWidth;
+                int inSampleSize = 1;
+
+                if (height > reqHeight || width > reqWidth){
+                    final int halfHeight = height /2;
+                    final int halfWidth = width /2;
+
+                    // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                    // height and width larger than the requested height and width.
+                    while ((halfHeight / inSampleSize) > reqHeight && ( halfWidth / inSampleSize)
+                            > reqWidth) {
+                        inSampleSize *= 2;
+                    }
+                }
+                return inSampleSize;
+    }
+
+    private Bitmap decodeSampledBitmap(String pathName, int reqWidth, int reqHeight){
+        // Decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(pathName, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(pathName, options);
+    }
+
+    // Get list of image file paths
+    private static ArrayList<String> getFilePaths(Activity activity){
+        Uri uri;
+        Cursor cursor;
+        int column_index;
+        StringTokenizer st1;
+        ArrayList<String> listOfAllImages = new ArrayList<String>();
+        String absolutePathOfImage = null;
+        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        String[] projection = {MediaStore.MediaColumns.DATA};
+
+        cursor = activity.getContentResolver().query(uri, projection, null, null, null);
+
+        column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        while (cursor.moveToNext()) {
+            absolutePathOfImage = cursor.getString(column_index);
+            listOfAllImages.add(absolutePathOfImage);
+        }
+
+        return listOfAllImages;
+    }
 }
