@@ -86,6 +86,18 @@
         app:layout_constraintTop_toBottomOf="@+id/startTime"
         android:importantForAutofill="no" />
 
+    <Button
+        android:id="@+id/submitSearch"
+        android:layout_width="372dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:onClick="onSearchClick"
+        android:text="@android:string/search_go"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/endDate" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

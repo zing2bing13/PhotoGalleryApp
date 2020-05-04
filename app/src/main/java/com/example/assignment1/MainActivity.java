@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.telephony.mbms.FileInfo;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,9 +23,12 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.function.Predicate;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int GET_FILTERS = 2;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
     private ImageView imageView;
     private EditText currentImageCaption;
@@ -100,6 +104,10 @@ public class MainActivity extends AppCompatActivity {
             imageView.setImageBitmap(imageBitmap);
             //add timestamp
             getTimeStamp();
+        } else if (requestCode == GET_FILTERS && resultCode == Activity.RESULT_OK) {
+            Bundle extras = data.getExtras();
+            List<Predicate<FileInfo>> imageBitmap = (List<Predicate<FileInfo>>) extras.get("Filter");
+            // Set filters
         }
     }
 
@@ -109,10 +117,14 @@ public class MainActivity extends AppCompatActivity {
         currentImageCaption.setText(timeStamp);
     }
 
+    private void applyFilters(List<Predicate<FileInfo>> filters) {
+
+    }
+
     // Called when the user taps the Search button
     public void onSearchClick(View view) {
         Intent intent = new Intent(this, SearchActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, GET_FILTERS);
     }
 
 }
