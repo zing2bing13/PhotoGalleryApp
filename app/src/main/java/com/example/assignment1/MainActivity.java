@@ -12,12 +12,15 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -26,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,9 +41,11 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 123;
     private ArrayList<String> photoFilePaths = new ArrayList<String>();
     private ImageView image;
     private EditText currentImageCaption;
+    private TextView currentTimeStamp;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -53,29 +59,41 @@ public class MainActivity extends AppCompatActivity {
             photoFilePaths = getFilePaths(this);
         }
 
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+        } else {
+            photoFilePaths = getFilePaths(this);
+        }
+
         //set layout components
+        this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
+        this.currentTimeStamp = (TextView)this.findViewById(R.id.imageTimeStamp);
+
+        ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
         image = (ImageView) findViewById(R.id.imageView);
         try {
-                image.setImageBitmap(decodeSampledBitmap(photoFilePaths.get(0), 379, 358));
+            image.setImageBitmap(decodeSampledBitmap(photoFilePaths.get(0), 379, 358));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
-        ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
+        File photoFile = null;
+        Date photoDate = null;
 
-        //empty default image caption when focusing
-        currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if(hasFocus == true){
-                    if(currentImageCaption.getText().toString().compareTo("TIMESTAMP")==0){
-                        currentImageCaption.setText("");
-                    }
-                }
-            }
-        });
-        //set carma open function
+        try {
+            photoFile = new File(photoFilePaths.get(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (photoFile != null) {
+            photoDate = new Date(photoFile.lastModified());
+            currentTimeStamp.setText(photoDate.toString());
+            currentImageCaption.setText(getExifAttr(photoFilePaths.get(0),
+                    ExifInterface.TAG_IMAGE_DESCRIPTION));
+        }
+
+        //set camera open function
         snapButton.setOnClickListener(new View.OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.M)
@@ -87,6 +105,31 @@ public class MainActivity extends AppCompatActivity {
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
+            }
+        });
+
+        //empty default image caption when focusing
+        currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(hasFocus == true){
+                    if(currentImageCaption.getText().toString().compareTo("CAPTION")==0){
+                        currentImageCaption.setText("");
+                    }
+                }
+            }
+        });
+
+        currentImageCaption.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    setExifAttr(photoFilePaths.get(0),
+                            ExifInterface.TAG_IMAGE_DESCRIPTION,currentImageCaption.getText().toString());
+                    currentImageCaption.clearFocus();
+                    return false;
+                }
+                return false;
             }
         });
     }
@@ -147,8 +190,8 @@ public class MainActivity extends AppCompatActivity {
 
     //get current timestamp when taking photo
     private void getTimeStamp(){
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss").format(new Date());
-        currentImageCaption.setText(timeStamp);
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        currentTimeStamp.setText(timeStamp);
     }
 
     // Called when the user taps the Search button
@@ -214,5 +257,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return listOfAllImages;
+    }
+
+    private String getExifAttr(String path, String tag) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            return String.valueOf(exif.getAttribute(tag));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void setExifAttr(String path, String tag, String value) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            exif.setAttribute(tag, value);
+            exif.saveAttributes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
