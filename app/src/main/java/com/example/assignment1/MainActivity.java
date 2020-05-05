@@ -12,13 +12,17 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,8 +33,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Struct;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
@@ -38,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_CAMERA_PERMISSION_CODE = 4192;
     private static final int MY_PERMISSION_ALL = 1;
     private Uri mPicCaptureUri = null;
+    private String currentImageName = null;
     private String currentPhotoPath = null;
     private ImageView imageView;
     private EditText currentImageCaption;
@@ -141,10 +148,12 @@ public class MainActivity extends AppCompatActivity {
             //Continue only if the File was successfully created
             if(photoFile != null){
                 ContentValues values = new ContentValues(3);
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                String displayName =  "JPEG_." + timeStamp + ".jpg";
+                String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+                String imageFileName = "JPEG_" + timeStamp + ".jpg";
+                String displayName =  imageFileName;
 
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, displayName);
+                values.put(MediaStore.Images.Media.TITLE, imageFileName);
                 values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
                 //get a file reference
                 Uri insertUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
@@ -168,8 +177,8 @@ public class MainActivity extends AppCompatActivity {
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         //Create an image file name by timestamp
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + ".jpg";
 
         //put together the directory and the timestamp to make a unique image location
         File image = File.createTempFile(
@@ -179,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         );
         // Save a file: path for use with ACTION_VIEW intents
         currentPhotoPath = image.getAbsolutePath();
-
+        currentImageName = imageFileName;
         return image;
     }
 
@@ -190,6 +199,23 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(photoPickerIntent,RESULT_LOAD_IMG);
     }
 
+    public static String getFileName(Context context, Uri uri){
+        String result = null;
+        String[] projection = {MediaStore.Images.Media.DISPLAY_NAME};
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null);
+        if(cursor != null){
+            if(cursor.moveToFirst()){
+                //int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
+                result = cursor.getString(columnIndex);
+                //Bitmap selectFile = BitmapFactory.decodeFile(path);
+                //imageView.setImageBitmap(selectFile);
+                //currentImageCaption.setText(cursor.getString(nameIndex));
+            }
+            cursor.close();
+        }
+        return result;
+    }
     //Return the encoded photo from either gallery or camera
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -197,16 +223,34 @@ public class MainActivity extends AppCompatActivity {
 
         //Return the image from gallery to bitmap (gallery)
         if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK){
-            try{
-                final Uri imageUri = data.getData();
+            //try{
+
+                /*Uri imageUri = data.getData();
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 imageView.setImageBitmap(selectedImage);
-                currentImageCaption.setVisibility(View.VISIBLE);
-            } catch (FileNotFoundException e) {
+                currentImageCaption.setVisibility(View.VISIBLE);*/
+
+                /*
+                String picturePath = getPath(this, imageUri);
+                Bitmap selectFile = BitmapFactory.decodeFile(picturePath);
+                imageView.setImageBitmap(selectFile);
+                */
+                Uri imageUri = data.getData();
+                final InputStream imageStream;
+                try {
+                    imageStream = getContentResolver().openInputStream(imageUri);
+                    final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                    imageView.setImageBitmap(selectedImage);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                String imageName = getFileName(this, imageUri);
+                currentImageCaption.setText(imageName);
+            /*} catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(this, R.string.errorReadingGalleryPhoto, Toast.LENGTH_LONG).show();
-            }
+            }*/
 
         //Return the encoded photo as a small bitmap under the key "data" (camera)
         }else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
@@ -215,14 +259,16 @@ public class MainActivity extends AppCompatActivity {
                 InputStream imageStream = getContentResolver().openInputStream(mPicCaptureUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(imageStream);
                 imageView.setImageBitmap(bitmap);
+                //Hidden the image caption if no image yet
+                currentImageCaption.setVisibility(View.VISIBLE);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
-            //Hidden the image caption if no image yet
-            currentImageCaption.setVisibility(View.VISIBLE);
+
             //add timestamp
-            getTimeStamp();
+            //getTimeStamp();
+            currentImageCaption.setText(currentImageName);
         }
 
         //If no recent photo
@@ -258,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Get current timestamp when taking photo
     private void getTimeStamp(){
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date());
         currentImageCaption.setText(timeStamp);
     }
 
