@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,6 +148,8 @@ public class MainActivity extends AppCompatActivity {
         File file = new File(currentPhotoPath);
         String filename = file.getName();
         currentImageCaption.setText(filename);
+        //get image taken timestamp to textview
+        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
     }
 
     //Right arrow button listener
@@ -166,6 +169,12 @@ public class MainActivity extends AppCompatActivity {
         File file = new File(currentPhotoPath);
         String filename = file.getName();
         currentImageCaption.setText(filename);
+        //get image taken timestamp to textview
+        //String dateTaken = getTimeStamp(this, mPicCaptureUri);
+        /*Long lastmodied= file.lastModified();
+        Date d = new Date(lastmodied);
+        String dateTaken = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(d);*/
+        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
     }
 
     //Take Photo Button Listener
@@ -218,11 +227,16 @@ public class MainActivity extends AppCompatActivity {
             //Continue only if the File was successfully created
             if(photoFile != null){
                 ContentValues values = new ContentValues(4);
-                String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+                /*
+                String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());*/
+                Long lastmodied= photoFile.lastModified();
+                //String dateTaken = getTimeStamp(this, date);
+                Date d = new Date(lastmodied);
+                String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(d);
                 String imageFileName = "JPEG_" + timeStamp + ".jpg";
 
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName);
-                values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+                values.put(MediaStore.Images.Media.DATE_TAKEN, timeStamp);
                 values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
                 //get a file reference
                 Uri insertUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
@@ -310,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         //Create an image file name by timestamp
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + ".jpg";
 
         //put together the directory and the timestamp to make a unique image location
@@ -342,6 +356,33 @@ public class MainActivity extends AppCompatActivity {
             if(cursor.moveToFirst()){
                 int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
                 result = cursor.getString(columnIndex);
+            }
+            cursor.close();
+        }
+        return result;
+    }
+    private static String getTimeStamp(String filepath){
+        File file = new File(filepath);
+        //get image taken timestamp to textview
+        Long lastmodied= file.lastModified();
+        //String dateTaken = getTimeStamp(this, date);
+        Date d = new Date(lastmodied);
+        String dateTaken = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(d);
+        return dateTaken;
+    }
+
+    //get image taken timestamp from file path
+    private static String getTimeStamp(Context context, Uri uri){
+        String result = null;
+        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DATE_TAKEN);
+        if(cursor != null){
+            if(cursor.moveToFirst()){
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN);
+                long longDate = cursor.getLong(columnIndex);
+                Date d = new Date(longDate);
+                result = new SimpleDateFormat("MM/dd/yyyy HH:mm").format(d);
+
             }
             cursor.close();
         }
@@ -385,10 +426,15 @@ public class MainActivity extends AppCompatActivity {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }*/
+                //put image file name to editview
                 String imageName = getFileName(this, imageUri);
                 currentImageCaption.setText(imageName);
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
+
+                //get image taken timestamp to textview
+                String dateTaken = getTimeStamp(this, imageUri);
+                currentTimeStamp.setText(dateTaken);
         //Return the encoded photo as a small bitmap under the key "data" (camera)
         }else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
 
@@ -406,6 +452,9 @@ public class MainActivity extends AppCompatActivity {
 
             //add timestamp
             currentImageCaption.setText(currentImageName);
+            //get image taken timestamp to textview
+            String dateTaken = getTimeStamp(currentPhotoPath);
+            currentTimeStamp.setText(dateTaken);
         }
 
         //If no recent photo
