@@ -70,21 +70,21 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         // Get the caption text
-        filter.Caption = ((EditText)findViewById(R.id.searchView)).getText().toString();
+        //filter.Caption = ((EditText)findViewById(R.id.searchView)).getText().toString();
 
         // Get intent
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = getIntent();
         // Add filters in our Extra
         intent.putExtra("Filter", filter);
         // Set the result to ok
-        setResult(RESULT_OK);
+        setResult(RESULT_OK, intent);
         // END
         finish();
     }
 
     private Date TryParseDate(String text) {
         try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss");
              return (Date) simpleDateFormat.parse(text);
         } catch (ParseException e) {
             return null;
