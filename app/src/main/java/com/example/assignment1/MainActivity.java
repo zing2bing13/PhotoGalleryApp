@@ -12,18 +12,22 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.telephony.mbms.FileInfo;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import com.example.assignment1.Models.ImageExifModel;
 import com.example.assignment1.Util.Filter.Filter;
 import com.example.assignment1.Util.Filter.ImageFilter;
@@ -41,7 +45,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
-    static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int RESULT_LOAD_IMG = 2;
     static final int GET_FILTERS = 2;
     private static final int MY_CAMERA_PERMISSION_CODE = 100;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 101;
@@ -52,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //set layout components
         this.imageView = (ImageView)this.findViewById(R.id.imageView);
         this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
@@ -69,7 +73,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        //set carma open function
+
+        //read photos from gallery
+        readPhotoGallery();
+
+        //Take photo
         snapButton.setOnClickListener(new View.OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.M)
@@ -81,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
+                //add timestamp
+                getTimeStamp();
             }
         });
     }
@@ -92,6 +102,13 @@ public class MainActivity extends AppCompatActivity {
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
+    }
+
+    //Start the gallery external activity and handle image intent
+    private void readPhotoGallery(){
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        startActivityForResult(photoPickerIntent,RESULT_LOAD_IMG);
     }
 
     //Check camera permission result
@@ -114,12 +131,33 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+
+        //Return the image from gallery to bitmap (gallery)
+        if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK){
+            try{
+                final Uri imageUri = data.getData();
+                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                imageView.setImageBitmap(selectedImage);
+                currentImageCaption.setVisibility(View.VISIBLE);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error when read the photo gallery", Toast.LENGTH_LONG).show();
+            }
+
+        //Return the encoded photo as a small bitmap under the key "data" (camera)
+        }else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageView.setImageBitmap(imageBitmap);
-            //add timestamp
-            getTimeStamp();
+            //Hidden the image caption if no image yet
+            currentImageCaption.setVisibility(View.VISIBLE);
+        }
+
+        //If no recent photo
+        else{
+            Toast.makeText(this, "No recent photo in gallery", Toast.LENGTH_LONG).show();
+            currentImageCaption.setVisibility(View.INVISIBLE);
         } else if (requestCode == GET_FILTERS && resultCode == Activity.RESULT_OK) {
             //Intent result = getIntent();
             if (data != null) {
@@ -132,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //get current timestamp when taking photo
+    //Get current timestamp when taking photo
     private void getTimeStamp(){
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss").format(new Date());
         currentImageCaption.setText(timeStamp);
