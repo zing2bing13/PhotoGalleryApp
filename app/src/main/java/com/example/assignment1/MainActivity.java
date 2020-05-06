@@ -4,6 +4,7 @@ package com.example.assignment1;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
@@ -15,19 +16,22 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
@@ -53,19 +58,20 @@ public class MainActivity extends AppCompatActivity {
     private Button previousPhotoBtn;
     private Button nextPhotoBtn;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+      
         //set layout components
         this.imageView = (ImageView)this.findViewById(R.id.imageView);
         this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
         this.currentTimeStamp = (TextView) this.findViewById(R.id.timeStamp);
         ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
         Button galleryButton = (Button)this.findViewById(R.id.gallery);
-        this.previousPhotoBtn = (Button)this.findViewById(R.id.leftArrowBtn);
-        this.nextPhotoBtn = (Button)this.findViewById(R.id.rightArrowBtn);
+        this.previousPhotoBtn = (Button)this.findViewById(R.id.buttonLeft);
+        this.nextPhotoBtn = (Button)this.findViewById(R.id.buttonRight);
 
         //read photos from gallery
         readPhotoGallery();
@@ -93,19 +99,19 @@ public class MainActivity extends AppCompatActivity {
                 onNextPhotoBtnClicked(v);
             }
         });
-
+        /*
         //empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if(hasFocus == true){
-                    if(currentImageCaption.getText().toString().compareTo("TIMESTAMP")==0){
+                    if(currentImageCaption.getText().toString().compareTo("CAPTION")==0){
                         currentImageCaption.setText("");
                     }
                 }
             }
-        });
-
+        });*/
+      
         //Take photo button clicked
         snapButton.setOnClickListener(new View.OnClickListener()
         {
@@ -113,6 +119,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v){
                 onTakePhotoClicked(v);
+
+        currentImageCaption.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    setExifAttr(photoFilePaths.get(0),
+                            ExifInterface.TAG_IMAGE_DESCRIPTION,currentImageCaption.getText().toString());
+                    currentImageCaption.clearFocus();
+                    return false;
+                }
+                return false;
             }
         });
 
@@ -253,7 +270,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     //get all filepath in the picture folder
     protected ArrayList<String> getAllFilePaths(){
         Uri u = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -280,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
                 catch(Exception e)
                 {
                 }
+
             }
             while (c.moveToNext());
             directories = new String[dirList.size()];
@@ -337,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
         currentPhotoPath = image.getAbsolutePath();
         currentImageName = imageFileName;
         return image;
+
     }
 
 
@@ -409,6 +427,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+
         //Return the image from gallery to bitmap (gallery)
         if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK){
 
@@ -462,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
         }
     }
-
+          
     //Decode the image scale
     private BitmapFactory.Options setPicBitmapFactoryOption(){
         // Get the dimensions of the View
@@ -485,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
         bmOptions.inPurgeable = true;
 
         return bmOptions;
+
     }
 
     // Called when the user taps the Search button
@@ -492,5 +512,84 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SearchActivity.class);
         startActivity(intent);
     }
+    /*
+    // Loading large bitmaps efficiently
+    private int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+                final int height = options.outHeight;
+                final int width = options.outWidth;
+                int inSampleSize = 1;
 
+                if (height > reqHeight || width > reqWidth){
+                    final int halfHeight = height /2;
+                    final int halfWidth = width /2;
+
+                    // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                    // height and width larger than the requested height and width.
+                    while ((halfHeight / inSampleSize) > reqHeight && ( halfWidth / inSampleSize)
+                            > reqWidth) {
+                        inSampleSize *= 2;
+                    }
+                }
+                return inSampleSize;
+    }
+    
+    private Bitmap decodeSampledBitmap(String pathName, int reqWidth, int reqHeight){
+        // Decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(pathName, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(pathName, options);
+    }
+    
+    // Get list of image file paths
+    private static ArrayList<String> getFilePaths(Activity activity){
+        Uri uri;
+        Cursor cursor;
+        int column_index;
+        StringTokenizer st1;
+        ArrayList<String> listOfAllImages = new ArrayList<String>();
+        String absolutePathOfImage = null;
+        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        String[] projection = {MediaStore.MediaColumns.DATA};
+
+        cursor = activity.getContentResolver().query(uri, projection, null, null, null);
+
+        column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        while (cursor.moveToNext()) {
+            absolutePathOfImage = cursor.getString(column_index);
+            listOfAllImages.add(absolutePathOfImage);
+        }
+
+        return listOfAllImages;
+    }*/
+
+    private String getExifAttr(String path, String tag) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            return String.valueOf(exif.getAttribute(tag));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void setExifAttr(String path, String tag, String value) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            exif.setAttribute(tag, value);
+            exif.saveAttributes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
