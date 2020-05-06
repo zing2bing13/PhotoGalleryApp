@@ -1,0 +1,10 @@
+diff a/app/build.gradle b/app/build.gradle	(rejected hunks)
+@@ -7,7 +7,7 @@
+     defaultConfig {
+         applicationId "com.example.assignment1"
+         minSdkVersion 19
+-        targetSdkVersion 29
++        targetSdkVersion 28
+         versionCode 1
+         versionName "1.0"
+ 
