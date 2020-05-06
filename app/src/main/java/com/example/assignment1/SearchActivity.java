@@ -84,8 +84,8 @@ public class SearchActivity extends AppCompatActivity {
 
     private Date TryParseDate(String text) {
         try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss");
-             return  simpleDateFormat.parse(text);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+             return simpleDateFormat.parse(text);
         } catch (ParseException e) {
             return null;
         }

@@ -16,7 +16,7 @@ public class ImageFilter implements Serializable {
     public Date StartDate;
     public Date EndDate;
     public String Caption;
-    private final String DATE_FORMAT = "yyyy-MM-dd HH::mm::ss";
+    private final String DATE_FORMAT = "yyyy-MM-dd";
     /***
      * Gets a list of filters to filter with
      * @return a list of filters
