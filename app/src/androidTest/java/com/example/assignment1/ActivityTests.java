@@ -53,9 +53,9 @@ public class ActivityTests {
         onView(withId(R.id.endDate)).perform(typeText(dateString));
 
         // Find search button and click it
-        onView(withId(R.id.searchView)).perform(click());
+        onView(withId(R.id.submitSearch)).perform(click());
 
-        // Should only have 1 result
-        //onView(withId(R.id.searchActivity)).check(new RecyclerViewItemCountAssertion(1));
+        // Test to see if the Search Activity is in foreground
+        onView(withId(R.id.mainActivity)).check(matches(isDisplayed()));
     }
 }

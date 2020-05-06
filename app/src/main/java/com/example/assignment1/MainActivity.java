@@ -145,8 +145,11 @@ public class MainActivity extends AppCompatActivity {
                                     .map(file -> new ImageExifModel(file, getExifInterface(file)))
                                     .collect(Collectors.toList());
 
-        ImageExifModel result = (ImageExifModel) Filter.ApplyFilters(files, filter.GetFilters());
+        List<ImageExifModel> results = (List<ImageExifModel>) Filter.ApplyFilters(files, filter.GetFilters());
 
+        if(!results.isEmpty()) {
+            ImageExifModel result = results.get(0);
+        }
     }
 
     // Called when the user taps the Search button
