@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private EditText currentImageCaption;
     private TextView currentTimeStamp;
+    private Button previousPhotoBtn;
+    private Button nextPhotoBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
         this.currentTimeStamp = (TextView) this.findViewById(R.id.timeStamp);
         ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
         Button galleryButton = (Button)this.findViewById(R.id.gallery);
-        Button previousPhotoBtn = (Button)this.findViewById(R.id.leftArrowBtn);
-        Button nextPhotoBtn = (Button)this.findViewById(R.id.rightArrowBtn);
+        this.previousPhotoBtn = (Button)this.findViewById(R.id.leftArrowBtn);
+        this.nextPhotoBtn = (Button)this.findViewById(R.id.rightArrowBtn);
 
         //read photos from gallery
         readPhotoGallery();
@@ -91,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         //empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -113,6 +114,9 @@ public class MainActivity extends AppCompatActivity {
                 onTakePhotoClicked(v);
             }
         });
+
+        nextPhotoBtn.setVisibility(View.INVISIBLE);
+        previousPhotoBtn.setVisibility(View.INVISIBLE);
     }
 
     //Check whether all the permissions has been granted
@@ -140,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
         currentPhotoPath = allImagePaths.get(photoLocation);
         Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
         imageView.setImageBitmap(selectedImage);
+        File file = new File(currentPhotoPath);
+        String filename = file.getName();
+        currentImageCaption.setText(filename);
     }
 
     //Right arrow button listener
@@ -156,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
         currentPhotoPath = allImagePaths.get(photoLocation);
         Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
         imageView.setImageBitmap(selectedImage);
+        File file = new File(currentPhotoPath);
+        String filename = file.getName();
+        currentImageCaption.setText(filename);
     }
 
     //Take Photo Button Listener
@@ -255,15 +265,12 @@ public class MainActivity extends AppCompatActivity {
                 }
                 catch(Exception e)
                 {
-
                 }
             }
             while (c.moveToNext());
             directories = new String[dirList.size()];
             dirList.toArray(directories);
-
         }
-
         for(int i=0;i<dirList.size();i++)
         {
             File imageDir = new File(directories[i]);
@@ -272,11 +279,9 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             for (File imagePath : imageList) {
                 try {
-
                     if(imagePath.isDirectory())
                     {
                         imageList = imagePath.listFiles();
-
                     }
                     if ( imagePath.getName().contains(".jpg")|| imagePath.getName().contains(".JPG")
                             || imagePath.getName().contains(".jpeg")|| imagePath.getName().contains(".JPEG")
@@ -285,10 +290,8 @@ public class MainActivity extends AppCompatActivity {
                             || imagePath.getName().contains(".bmp") || imagePath.getName().contains(".BMP")
                     )
                     {
-
                         String path= imagePath.getAbsolutePath();
                         resultIAV.add(path);
-
                     }
                 }
                 //  }
@@ -297,7 +300,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
         return resultIAV;
     }
 
@@ -385,7 +387,8 @@ public class MainActivity extends AppCompatActivity {
                 }*/
                 String imageName = getFileName(this, imageUri);
                 currentImageCaption.setText(imageName);
-
+                nextPhotoBtn.setVisibility(View.VISIBLE);
+                previousPhotoBtn.setVisibility(View.VISIBLE);
         //Return the encoded photo as a small bitmap under the key "data" (camera)
         }else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
 
@@ -395,6 +398,8 @@ public class MainActivity extends AppCompatActivity {
                 imageView.setImageBitmap(bitmap);
                 //Hidden the image caption if no image yet
                 currentImageCaption.setVisibility(View.VISIBLE);
+                nextPhotoBtn.setVisibility(View.VISIBLE);
+                previousPhotoBtn.setVisibility(View.VISIBLE);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -406,7 +411,6 @@ public class MainActivity extends AppCompatActivity {
         //If no recent photo
         else{
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
-            currentImageCaption.setVisibility(View.INVISIBLE);
         }
     }
 
