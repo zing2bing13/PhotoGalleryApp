@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.assignment1.Util.Filter.ImageFilter;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.text.ParseException;
@@ -44,7 +46,8 @@ public class SearchActivity extends AppCompatActivity {
 
     public void onSearchClick(View view) {
         // Initialize list of filters
-        List<Predicate<FileInfo>> filters = new ArrayList<Predicate<FileInfo>>();
+        //List<Predicate<FileInfo>> filters = new ArrayList<Predicate<FileInfo>>();
+        ImageFilter filter = new ImageFilter();
 
         // Try to get our start date value if it's set
         String startDateString = ((EditText)findViewById(R.id.startDate)).getText().toString();
@@ -52,9 +55,7 @@ public class SearchActivity extends AppCompatActivity {
             // If we have a date, try to parse it
             Date parseDate = TryParseDate(startDateString+ " " + ((EditText)findViewById(R.id.startTime)).getText().toString());
             // If parse was successful, get add a filter for our start date
-            if(parseDate != null) {
-                //filters.add(f -> (FileInfo) f.lastModified() < startDate)
-            }
+            filter.StartDate = parseDate;
         }
 
         // Try to get an end date
@@ -64,14 +65,17 @@ public class SearchActivity extends AppCompatActivity {
             Date parseDate = TryParseDate(endDateString+ " " + ((EditText)findViewById(R.id.endTime)).getText().toString());
             // If parse was successful, get add a filter for our start date
             if(parseDate != null) {
-                //filters.add(f -> (FileInfo) f.lastModified() > parseDate)
+                filter.EndDate = parseDate;
             }
         }
+
+        // Get the caption text
+        filter.Caption = ((EditText)findViewById(R.id.searchView)).getText().toString();
 
         // Get intent
         Intent intent = new Intent(this, MainActivity.class);
         // Add filters in our Extra
-        intent.putExtra("Filters", (Parcelable) filters);
+        intent.putExtra("Filter", filter);
         // Set the result to ok
         setResult(RESULT_OK);
         // END

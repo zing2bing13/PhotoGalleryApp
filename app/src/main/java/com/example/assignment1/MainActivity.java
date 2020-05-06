@@ -21,7 +21,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.assignment1.Util.Filter.ImageFilter;
+
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
@@ -106,8 +109,9 @@ public class MainActivity extends AppCompatActivity {
             getTimeStamp();
         } else if (requestCode == GET_FILTERS && resultCode == Activity.RESULT_OK) {
             Bundle extras = data.getExtras();
-            List<Predicate<FileInfo>> imageBitmap = (List<Predicate<FileInfo>>) extras.get("Filter");
+            ImageFilter filter = (ImageFilter) extras.get("Filter");
             // Set filters
+            applyFilters(filter);
         }
     }
 
@@ -117,8 +121,8 @@ public class MainActivity extends AppCompatActivity {
         currentImageCaption.setText(timeStamp);
     }
 
-    private void applyFilters(List<Predicate<FileInfo>> filters) {
-
+    private void applyFilters(ImageFilter filter) {
+        List<Predicate<FileInfo>> filters = new ArrayList<Predicate<FileInfo>>();
     }
 
     // Called when the user taps the Search button
