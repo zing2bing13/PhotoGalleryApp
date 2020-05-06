@@ -35,6 +35,8 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private Uri mPicCaptureUri = null;
     private String currentImageName = null;
     private String currentPhotoPath = null;
+    private int photoLocation = -1;
     private ImageView imageView;
     private EditText currentImageCaption;
     private TextView currentTimeStamp;
@@ -58,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
         this.currentTimeStamp = (TextView) this.findViewById(R.id.timeStamp);
         ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
         Button galleryButton = (Button)this.findViewById(R.id.gallery);
+        Button previousPhotoBtn = (Button)this.findViewById(R.id.leftArrowBtn);
+        Button nextPhotoBtn = (Button)this.findViewById(R.id.rightArrowBtn);
 
         //read photos from gallery
         readPhotoGallery();
@@ -69,6 +74,23 @@ public class MainActivity extends AppCompatActivity {
                 readPhotoGallery();
             }
         });
+
+        //previous photo button clicked
+        previousPhotoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onPreviousPhotoBtnClicked(v);
+            }
+        });
+
+        //next photo button clicked
+        nextPhotoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNextPhotoBtnClicked(v);
+            }
+        });
+
 
         //empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -105,6 +127,36 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    //Left arrow button listener
+    public void onPreviousPhotoBtnClicked(View v){
+        ArrayList<String> allImagePaths = getAllFilePaths();
+        if(currentPhotoPath!=null){
+            photoLocation = allImagePaths.indexOf(currentPhotoPath);
+        }
+        //not the last image
+        if(photoLocation >= 1){
+            photoLocation--;
+        }
+        currentPhotoPath = allImagePaths.get(photoLocation);
+        Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
+        imageView.setImageBitmap(selectedImage);
+    }
+
+    //Right arrow button listener
+    public void onNextPhotoBtnClicked(View v){
+        ArrayList<String> allImagePaths = getAllFilePaths();
+        if(currentPhotoPath!=null){
+            photoLocation = allImagePaths.indexOf(currentPhotoPath);
+        }
+
+        //not the last image
+        if(photoLocation <(allImagePaths.size()-1)){
+            photoLocation++;
+        }
+        currentPhotoPath = allImagePaths.get(photoLocation);
+        Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
+        imageView.setImageBitmap(selectedImage);
+    }
 
     //Take Photo Button Listener
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -177,6 +229,78 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    //get all filepath in the picture folder
+    protected ArrayList<String> getAllFilePaths(){
+        Uri u = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        String[] projection = {MediaStore.Images.ImageColumns.DATA};
+        Cursor c = null;
+        SortedSet<String> dirList = new TreeSet<String>();
+        ArrayList<String> resultIAV = new ArrayList<String>();
+
+        String[] directories = null;
+        if (u != null)
+        {
+            c = getContentResolver().query(u, projection, null, null, null);
+        }
+
+        if ((c != null) && (c.moveToFirst()))
+        {
+            do
+            {
+                String tempDir = c.getString(0);
+                tempDir = tempDir.substring(0, tempDir.lastIndexOf("/"));
+                try{
+                    dirList.add(tempDir);
+                }
+                catch(Exception e)
+                {
+
+                }
+            }
+            while (c.moveToNext());
+            directories = new String[dirList.size()];
+            dirList.toArray(directories);
+
+        }
+
+        for(int i=0;i<dirList.size();i++)
+        {
+            File imageDir = new File(directories[i]);
+            File[] imageList = imageDir.listFiles();
+            if(imageList == null)
+                continue;
+            for (File imagePath : imageList) {
+                try {
+
+                    if(imagePath.isDirectory())
+                    {
+                        imageList = imagePath.listFiles();
+
+                    }
+                    if ( imagePath.getName().contains(".jpg")|| imagePath.getName().contains(".JPG")
+                            || imagePath.getName().contains(".jpeg")|| imagePath.getName().contains(".JPEG")
+                            || imagePath.getName().contains(".png") || imagePath.getName().contains(".PNG")
+                            || imagePath.getName().contains(".gif") || imagePath.getName().contains(".GIF")
+                            || imagePath.getName().contains(".bmp") || imagePath.getName().contains(".BMP")
+                    )
+                    {
+
+                        String path= imagePath.getAbsolutePath();
+                        resultIAV.add(path);
+
+                    }
+                }
+                //  }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return resultIAV;
+    }
+
     //Create an image file named by timestamp and save to path
     private File createImageFile() throws IOException{
 
@@ -199,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
+
     //Start the gallery external activity and handle image intent
     private void readPhotoGallery(){
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
@@ -206,24 +331,35 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(photoPickerIntent,RESULT_LOAD_IMG);
     }
 
-    public static String getFileName(Context context, Uri uri){
+    //get image caption from file path
+    private static String getFileName(Context context, Uri uri){
         String result = null;
         String[] projection = {MediaStore.Images.Media.DISPLAY_NAME};
         Cursor cursor = context.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DISPLAY_NAME);
         if(cursor != null){
             if(cursor.moveToFirst()){
-                //int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                 int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
                 result = cursor.getString(columnIndex);
-                //Bitmap selectFile = BitmapFactory.decodeFile(path);
-                //imageView.setImageBitmap(selectFile);
-                //currentImageCaption.setText(cursor.getString(nameIndex));
             }
             cursor.close();
         }
         return result;
     }
 
+    //get image file path from file path
+    private static String getFilePath(Context context, Uri uri){
+        String result = null;
+        String[] projection = {MediaStore.MediaColumns.DATA};
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null);
+        if(cursor != null){
+            if(cursor.moveToFirst()){
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+                result = cursor.getString(columnIndex);
+            }
+            cursor.close();
+        }
+        return result;
+    }
 
     //Return the encoded photo from either gallery or camera
     @Override
@@ -234,7 +370,11 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK){
 
                 Uri imageUri = data.getData();
-
+                mPicCaptureUri = imageUri;
+                currentPhotoPath = getFilePath(this, imageUri);
+                Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
+                imageView.setImageBitmap(selectedImage);
+                /*
                 final InputStream imageStream;
                 try {
                     imageStream = getContentResolver().openInputStream(imageUri);
@@ -242,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
                     imageView.setImageBitmap(selectedImage);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
-                }
+                }*/
                 String imageName = getFileName(this, imageUri);
                 currentImageCaption.setText(imageName);
 
@@ -293,12 +433,6 @@ public class MainActivity extends AppCompatActivity {
 
         return bmOptions;
     }
-    /*
-    //Get current timestamp when taking photo
-    private void getTimeStamp(){
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date());
-        currentImageCaption.setText(timeStamp);
-    }*/
 
     // Called when the user taps the Search button
     public void onSearchClick(View view) {

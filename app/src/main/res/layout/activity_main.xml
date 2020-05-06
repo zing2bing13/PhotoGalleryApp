@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/leftArrowBtn"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginStart="16dp"
@@ -18,7 +18,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/searchBtn"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_gravity="center"
@@ -34,7 +34,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/rightArrowBtn"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginTop="16dp"
@@ -58,7 +58,7 @@
             android:textColor="@color/colorFontDark"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button2" />
+            app:layout_constraintTop_toBottomOf="@+id/rightArrowBtn" />
 
     <ImageView
         android:id="@+id/imageView"
