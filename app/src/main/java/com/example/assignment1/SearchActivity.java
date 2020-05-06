@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.example.assignment1.Util.Filter.ImageFilter;
 
-import java.sql.Date;
+import java.util.Date;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -85,7 +85,7 @@ public class SearchActivity extends AppCompatActivity {
     private Date TryParseDate(String text) {
         try {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH::mm::ss");
-             return (Date) simpleDateFormat.parse(text);
+             return  simpleDateFormat.parse(text);
         } catch (ParseException e) {
             return null;
         }
