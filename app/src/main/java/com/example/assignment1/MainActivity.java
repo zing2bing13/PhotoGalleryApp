@@ -32,6 +32,11 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.assignment1.Models.ImageExifModel;
+import com.example.assignment1.Util.Filter.Filter;
+import com.example.assignment1.Util.Filter.ImageFilter;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,14 +45,19 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_TAKE_PHOTO = 228;
     private static final int MY_PERMISSION_ALL = 1;
+    private static final int MY_CAMERA_PERMISSION_CODE = 100;
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 101;
+    static final int GET_FILTERS = 3;
     private Uri mPicCaptureUri = null;
     private String currentImageName = null;
     private String currentPhotoPath = null;
@@ -383,7 +393,30 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
+    private static ArrayList<String> getFilePaths(Activity activity){
+        Uri uri;
+        Cursor cursor;
+        int column_index;
+        StringTokenizer st1;
+        ArrayList<String> listOfAllImages = new ArrayList<String>();
+        String absolutePathOfImage = null;
+        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        String[] projection = {MediaStore.MediaColumns.DATA};
+
+        cursor = activity.getContentResolver().query(uri, projection, null, null, null);
+
+        column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        while (cursor.moveToNext()) {
+            absolutePathOfImage = cursor.getString(column_index);
+            listOfAllImages.add(absolutePathOfImage);
+        }
+
+        return listOfAllImages;
+    }
+
     //Return the encoded photo from either gallery or camera
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -415,6 +448,16 @@ public class MainActivity extends AppCompatActivity {
             //get image taken timestamp to textview
             String dateTaken = getTimeStamp(currentPhotoPath);
             currentTimeStamp.setText(dateTaken);
+        } else if (requestCode == GET_FILTERS && resultCode == Activity.RESULT_OK) {
+            //Intent result = getIntent();
+            if (data != null) {
+                ImageFilter filter = (ImageFilter) data.getSerializableExtra("Filter");
+                // Set filters
+                if (filter != null) {
+                    applyFilters(filter);
+                }
+            }
+            Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
         }
 
         //If no recent photo
@@ -448,9 +491,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Called when the user taps the Search button
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void onSearchClick(View view) {
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // Explain to the user why we need to read the contacts
+            }
+
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+            // app-defined int constant that should be quite unique
+
+            return;
+        }
         Intent intent = new Intent(this, SearchActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, GET_FILTERS);
     }
 
     private String getExifAttr(String path, String tag) {
@@ -516,5 +577,43 @@ public class MainActivity extends AppCompatActivity {
 
         //get image taken timestamp to textview
         currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+    }
+
+    private ExifInterface getExifInterface(String path) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            return exif;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void applyFilters(ImageFilter filter) {
+        List<ImageExifModel> files = getFilePaths(this)
+                .stream()
+                .map(file -> new ImageExifModel(file, getExifInterface(file)))
+                .collect(Collectors.toList());
+
+        List<ImageExifModel> results = (List<ImageExifModel>) Filter.ApplyFilters(files, filter.GetFilters());
+
+        if(!results.isEmpty()) {
+            ImageExifModel result = results.get(0);
+
+            try {
+                InputStream imageStream = getContentResolver().openInputStream(mPicCaptureUri);
+                Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
+                imageView.setImageBitmap(bitmap);
+
+                //Hidden the image caption if no image yet
+                currentImageCaption.setVisibility(View.VISIBLE);
+                nextPhotoBtn.setVisibility(View.VISIBLE);
+                previousPhotoBtn.setVisibility(View.VISIBLE);
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+        }
     }
 }
