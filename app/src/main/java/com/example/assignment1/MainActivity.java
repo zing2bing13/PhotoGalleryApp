@@ -43,6 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -188,7 +189,11 @@ public class MainActivity extends AppCompatActivity {
     public void onTakePhotoClicked(View v){
         String[] permissionRequests = {Manifest.permission.CAMERA,
                                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                                       Manifest.permission.WRITE_EXTERNAL_STORAGE };
+                                       Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                        Manifest.permission.ACCESS_MEDIA_LOCATION,
+                                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                                        Manifest.permission.ACCOUNT_MANAGER,
+                Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS};
         if(!hasPermissions(this, permissionRequests)){
             ActivityCompat.requestPermissions(this, permissionRequests, MY_PERMISSION_ALL);
         }else{
@@ -639,13 +644,16 @@ public class MainActivity extends AppCompatActivity {
             ImageExifModel result = results.get(0);
 
             try {
-                InputStream imageStream = getContentResolver().openInputStream(Uri.parse(result.FilePath));
-                Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
+                //currentPhotoPath = getFilePath(this, Uri.parse(result.FilePath));
+                File file = new File(result.FilePath);
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                 imageView.setImageBitmap(bitmap);
 
                 currentImageCaption.setVisibility(View.VISIBLE);
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
+                currentImageCaption.setText(result.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION));
+                currentTimeStamp.setText("");
             } catch (Exception ex){
                 ex.printStackTrace();
             }
