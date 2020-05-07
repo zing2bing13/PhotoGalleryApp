@@ -639,7 +639,7 @@ public class MainActivity extends AppCompatActivity {
             ImageExifModel result = results.get(0);
 
             try {
-                InputStream imageStream = getContentResolver().openInputStream(mPicCaptureUri);
+                InputStream imageStream = getContentResolver().openInputStream(Uri.parse(result.FilePath));
                 Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
                 imageView.setImageBitmap(bitmap);
 

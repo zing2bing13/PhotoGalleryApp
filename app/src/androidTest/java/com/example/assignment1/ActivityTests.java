@@ -37,7 +37,6 @@ public class ActivityTests {
     public void testFilter() {
         ActivityScenario mainActivity = ActivityScenario.launch(MainActivity.class);
 
-        // TODO: Replace placeholder numbers with view ids
         // Find search button and click it
         onView(withId(R.id.buttonSearch)).perform(click());
 
