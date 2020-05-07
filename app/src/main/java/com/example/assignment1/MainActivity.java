@@ -504,11 +504,6 @@ public class MainActivity extends AppCompatActivity {
 
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-
-            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-            // app-defined int constant that should be quite unique
-
-            return;
         }
         Intent intent = new Intent(this, SearchActivity.class);
         startActivityForResult(intent, GET_FILTERS);
