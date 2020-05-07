@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -42,6 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         this.nextPhotoBtn = (Button)this.findViewById(R.id.buttonRight);
 
         //read photos from gallery
-        readPhotoGallery();
+        //readPhotoGallery();
 
         //gallery button clicked
         galleryButton.setOnClickListener(new View.OnClickListener() {
@@ -120,17 +122,35 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /*//empty default image caption when focusing
+        currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                String chk = currentPhotoPath.toString();
+                if(hasFocus == true){
+                    if(currentImageCaption.getText().toString().compareTo(chk)==0){
+                        currentImageCaption.setText("");
+                    }
+                }
+            }
+        });*/
+
         currentImageCaption.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    setExifAttr(currentPhotoPath,
-                            ExifInterface.TAG_IMAGE_DESCRIPTION,
-                            currentImageCaption.getText().toString());
+                if(currentPhotoPath != null) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        setExifAttr(currentPhotoPath,
+                                ExifInterface.TAG_IMAGE_DESCRIPTION,
+                                currentImageCaption.getText().toString());
+
+                        return false;
+                    }
+                    return false;
+                } else {
                     currentImageCaption.clearFocus();
                     return false;
                 }
-                return false;
             }
         });
 
@@ -167,7 +187,13 @@ public class MainActivity extends AppCompatActivity {
     //Take Photo Button Listener
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onTakePhotoClicked(View v){
-        String[] permissionRequests = {Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE };
+        String[] permissionRequests = {Manifest.permission.CAMERA,
+                                       Manifest.permission.READ_EXTERNAL_STORAGE,
+                                       Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                        Manifest.permission.ACCESS_MEDIA_LOCATION,
+                                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                                        Manifest.permission.ACCOUNT_MANAGER,
+                Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS};
         if(!hasPermissions(this, permissionRequests)){
             ActivityCompat.requestPermissions(this, permissionRequests, MY_PERMISSION_ALL);
         }else{
@@ -216,12 +242,13 @@ public class MainActivity extends AppCompatActivity {
                 ContentValues values = new ContentValues(4);
                 /*
                 String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());*/
-                Long lastmodied= photoFile.lastModified();
+                Long lastmodified= photoFile.lastModified();
                 //String dateTaken = getTimeStamp(this, date);
-                Date d = new Date(lastmodied);
+                Date d = new Date(lastmodified);
                 String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(d);
                 String imageFileName = "JPEG_" + timeStamp + ".jpg";
 
+                //place metadata to values collection
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName);
                 values.put(MediaStore.Images.Media.DATE_TAKEN, timeStamp);
                 values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
@@ -237,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (ActivityNotFoundException e) {
                     e.printStackTrace();
                 }
-
             }
         }
     }
@@ -549,7 +575,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         currentPhotoPath = allImagePaths.get(photoLocation);
-        getPhotoMeta(currentPhotoPath, filename);
+        getPhotoMeta(allImagePaths.get(photoLocation), filename);
     }
 
     public void getPhotoFromGallery(Intent data) {
@@ -560,18 +586,38 @@ public class MainActivity extends AppCompatActivity {
 
         nextPhotoBtn.setVisibility(View.VISIBLE);
         previousPhotoBtn.setVisibility(View.VISIBLE);
-        getPhotoMeta(currentPhotoPath,imageName);
+        getPhotoMeta(currentPhotoPath, imageName);
     }
 
-    public void getPhotoMeta(String path, String caption) {
+    public void getPhotoMeta(String path, String name) {
         Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
         imageView.setImageBitmap(selectedImage);
 
+        String exifCaption = getExifAttr(path, ExifInterface.TAG_IMAGE_DESCRIPTION);
+        String exifDateTime = getExifAttr(path, ExifInterface.TAG_DATETIME);
+
         //put image caption to editview
-        currentImageCaption.setText(caption);
+        if(exifCaption != null && !exifCaption.isEmpty()) {
+
+            if (exifCaption.compareTo("null") == 0) {
+                currentImageCaption.setText(name);
+            } else {
+                currentImageCaption.setText(exifCaption);
+            }
+        } else {
+            currentImageCaption.setText(name);
+        }
 
         //get image taken timestamp to textview
-        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+        if(exifDateTime != null && !exifDateTime.isEmpty()) {
+            if (exifDateTime.compareTo("null") == 0) {
+                currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+            } else {
+                currentTimeStamp.setText(exifDateTime);
+            }
+        } else {
+            currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+        }
     }
 
     private ExifInterface getExifInterface(String path) {
@@ -598,17 +644,25 @@ public class MainActivity extends AppCompatActivity {
             ImageExifModel result = results.get(0);
 
             try {
-                InputStream imageStream = getContentResolver().openInputStream(mPicCaptureUri);
-                Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
+                //currentPhotoPath = getFilePath(this, Uri.parse(result.FilePath));
+                File file = new File(result.FilePath);
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                 imageView.setImageBitmap(bitmap);
 
-                //Hidden the image caption if no image yet
                 currentImageCaption.setVisibility(View.VISIBLE);
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
+                currentImageCaption.setText(result.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION));
+                currentTimeStamp.setText("");
             } catch (Exception ex){
                 ex.printStackTrace();
             }
+        }
+        else {
+            currentImageCaption.setVisibility(View.INVISIBLE);
+            nextPhotoBtn.setVisibility(View.INVISIBLE);
+            previousPhotoBtn.setVisibility(View.INVISIBLE);
+            imageView.setVisibility(View.INVISIBLE);
         }
     }
 }

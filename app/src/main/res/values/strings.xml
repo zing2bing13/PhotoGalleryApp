@@ -14,4 +14,5 @@
     <string name="cameraPermissionDenied">Cannot use the camera without permission</string>
     <string name="errorReadingGalleryPhoto">Error when read the photo gallery</string>
     <string name="NoPhotoChosen">No photo chosen from gallery</string>
+    <string name="search_hint_caption">Caption</string>
 </resources>
