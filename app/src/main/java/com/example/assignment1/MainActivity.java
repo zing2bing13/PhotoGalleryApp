@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-      
+
         //set layout components
         this.imageView = (ImageView)this.findViewById(R.id.imageView);
         this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
@@ -99,33 +99,24 @@ public class MainActivity extends AppCompatActivity {
                 onNextPhotoBtnClicked(v);
             }
         });
-        /*
-        //empty default image caption when focusing
-        currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if(hasFocus == true){
-                    if(currentImageCaption.getText().toString().compareTo("CAPTION")==0){
-                        currentImageCaption.setText("");
-                    }
-                }
-            }
-        });*/
-      
+
         //Take photo button clicked
         snapButton.setOnClickListener(new View.OnClickListener()
         {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 onTakePhotoClicked(v);
+            }
+        });
 
         currentImageCaption.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    setExifAttr(photoFilePaths.get(0),
-                            ExifInterface.TAG_IMAGE_DESCRIPTION,currentImageCaption.getText().toString());
+                    setExifAttr(currentPhotoPath,
+                            ExifInterface.TAG_IMAGE_DESCRIPTION,
+                            currentImageCaption.getText().toString());
                     currentImageCaption.clearFocus();
                     return false;
                 }
@@ -151,47 +142,16 @@ public class MainActivity extends AppCompatActivity {
 
     //Left arrow button listener
     public void onPreviousPhotoBtnClicked(View v){
-        ArrayList<String> allImagePaths = getAllFilePaths();
-        if(currentPhotoPath!=null){
-            photoLocation = allImagePaths.indexOf(currentPhotoPath);
-        }
-        //not the last image
-        if(photoLocation >= 1){
-            photoLocation--;
-        }
-        currentPhotoPath = allImagePaths.get(photoLocation);
-        Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
-        imageView.setImageBitmap(selectedImage);
         File file = new File(currentPhotoPath);
         String filename = file.getName();
-        currentImageCaption.setText(filename);
-        //get image taken timestamp to textview
-        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+        getPhotoFromArray("back",filename);
     }
 
     //Right arrow button listener
     public void onNextPhotoBtnClicked(View v){
-        ArrayList<String> allImagePaths = getAllFilePaths();
-        if(currentPhotoPath!=null){
-            photoLocation = allImagePaths.indexOf(currentPhotoPath);
-        }
-
-        //not the last image
-        if(photoLocation <(allImagePaths.size()-1)){
-            photoLocation++;
-        }
-        currentPhotoPath = allImagePaths.get(photoLocation);
-        Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
-        imageView.setImageBitmap(selectedImage);
         File file = new File(currentPhotoPath);
         String filename = file.getName();
-        currentImageCaption.setText(filename);
-        //get image taken timestamp to textview
-        //String dateTaken = getTimeStamp(this, mPicCaptureUri);
-        /*Long lastmodied= file.lastModified();
-        Date d = new Date(lastmodied);
-        String dateTaken = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(d);*/
-        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
+        getPhotoFromArray("fwd",filename);
     }
 
     //Take Photo Button Listener
@@ -255,14 +215,16 @@ public class MainActivity extends AppCompatActivity {
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName);
                 values.put(MediaStore.Images.Media.DATE_TAKEN, timeStamp);
                 values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+
                 //get a file reference
                 Uri insertUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
                 mPicCaptureUri = insertUri;
-                try{
+
+                try {
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, insertUri);
                     currentPhotoPath = photoFile.getAbsolutePath();
                     startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                }catch (ActivityNotFoundException e){
+                } catch (ActivityNotFoundException e) {
                     e.printStackTrace();
                 }
 
@@ -350,13 +312,12 @@ public class MainActivity extends AppCompatActivity {
                 ".jpg",  /*suffix*/
                 storageDir     /*directory*/
         );
+
         // Save a file: path for use with ACTION_VIEW intents
         currentPhotoPath = image.getAbsolutePath();
         currentImageName = imageFileName;
         return image;
-
     }
-
 
     //Start the gallery external activity and handle image intent
     private void readPhotoGallery(){
@@ -427,50 +388,30 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK) {
+            //Return the image from gallery to bitmap (gallery)
+            getPhotoFromGallery(data);
 
-        //Return the image from gallery to bitmap (gallery)
-        if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK){
-
-                Uri imageUri = data.getData();
-                mPicCaptureUri = imageUri;
-                currentPhotoPath = getFilePath(this, imageUri);
-                Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
-                imageView.setImageBitmap(selectedImage);
-                /*
-                final InputStream imageStream;
-                try {
-                    imageStream = getContentResolver().openInputStream(imageUri);
-                    final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
-                    imageView.setImageBitmap(selectedImage);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }*/
-                //put image file name to editview
-                String imageName = getFileName(this, imageUri);
-                currentImageCaption.setText(imageName);
-                nextPhotoBtn.setVisibility(View.VISIBLE);
-                previousPhotoBtn.setVisibility(View.VISIBLE);
-
-                //get image taken timestamp to textview
-                String dateTaken = getTimeStamp(this, imageUri);
-                currentTimeStamp.setText(dateTaken);
-        //Return the encoded photo as a small bitmap under the key "data" (camera)
-        }else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
+        } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
+            //Return the encoded photo as a small bitmap under the key "data" (camera)
 
             try {
                 InputStream imageStream = getContentResolver().openInputStream(mPicCaptureUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
                 imageView.setImageBitmap(bitmap);
+
                 //Hidden the image caption if no image yet
                 currentImageCaption.setVisibility(View.VISIBLE);
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
             //add timestamp
             currentImageCaption.setText(currentImageName);
+
             //get image taken timestamp to textview
             String dateTaken = getTimeStamp(currentPhotoPath);
             currentTimeStamp.setText(dateTaken);
@@ -504,7 +445,6 @@ public class MainActivity extends AppCompatActivity {
         bmOptions.inPurgeable = true;
 
         return bmOptions;
-
     }
 
     // Called when the user taps the Search button
@@ -512,65 +452,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SearchActivity.class);
         startActivity(intent);
     }
-    /*
-    // Loading large bitmaps efficiently
-    private int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-                final int height = options.outHeight;
-                final int width = options.outWidth;
-                int inSampleSize = 1;
-
-                if (height > reqHeight || width > reqWidth){
-                    final int halfHeight = height /2;
-                    final int halfWidth = width /2;
-
-                    // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-                    // height and width larger than the requested height and width.
-                    while ((halfHeight / inSampleSize) > reqHeight && ( halfWidth / inSampleSize)
-                            > reqWidth) {
-                        inSampleSize *= 2;
-                    }
-                }
-                return inSampleSize;
-    }
-    
-    private Bitmap decodeSampledBitmap(String pathName, int reqWidth, int reqHeight){
-        // Decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(pathName, options);
-
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-
-        return BitmapFactory.decodeFile(pathName, options);
-    }
-    
-    // Get list of image file paths
-    private static ArrayList<String> getFilePaths(Activity activity){
-        Uri uri;
-        Cursor cursor;
-        int column_index;
-        StringTokenizer st1;
-        ArrayList<String> listOfAllImages = new ArrayList<String>();
-        String absolutePathOfImage = null;
-        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-
-        String[] projection = {MediaStore.MediaColumns.DATA};
-
-        cursor = activity.getContentResolver().query(uri, projection, null, null, null);
-
-        column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        while (cursor.moveToNext()) {
-            absolutePathOfImage = cursor.getString(column_index);
-            listOfAllImages.add(absolutePathOfImage);
-        }
-
-        return listOfAllImages;
-    }*/
 
     private String getExifAttr(String path, String tag) {
         try {
@@ -591,5 +472,49 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void getPhotoFromArray(String dir, String filename) {
+        ArrayList<String> allImagePaths = getAllFilePaths();
+
+        if(currentPhotoPath!=null){
+            photoLocation = allImagePaths.indexOf(currentPhotoPath);
+        }
+
+        //not the last image
+        if (dir.compareTo("back") == 0) {
+            if (photoLocation >= 1) {
+                photoLocation--;
+            }
+        } else {
+            if(photoLocation <(allImagePaths.size()-1)) {
+                photoLocation++;
+            }
+        }
+
+        currentPhotoPath = allImagePaths.get(photoLocation);
+        getPhotoMeta(currentPhotoPath, filename);
+    }
+
+    public void getPhotoFromGallery(Intent data) {
+        Uri imageUri = data.getData();
+        mPicCaptureUri = imageUri;
+        currentPhotoPath = getFilePath(this, imageUri);
+        String imageName = getFileName(this, imageUri);
+
+        nextPhotoBtn.setVisibility(View.VISIBLE);
+        previousPhotoBtn.setVisibility(View.VISIBLE);
+        getPhotoMeta(currentPhotoPath,imageName);
+    }
+
+    public void getPhotoMeta(String path, String caption) {
+        Bitmap selectedImage = BitmapFactory.decodeFile(currentPhotoPath, setPicBitmapFactoryOption());
+        imageView.setImageBitmap(selectedImage);
+
+        //put image caption to editview
+        currentImageCaption.setText(caption);
+
+        //get image taken timestamp to textview
+        currentTimeStamp.setText(getTimeStamp(currentPhotoPath));
     }
 }
