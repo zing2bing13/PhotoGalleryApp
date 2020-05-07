@@ -44,8 +44,8 @@ public class ActivityTests {
         // Test to see if the Search Activity is in foreground
         onView(withId(R.id.searchActivity)).check(matches(isDisplayed()));
 
-        String dateString = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
-
+        String dateString = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        
         // Find the start date text button and enter a date string
         onView(withId(R.id.startDate)).perform(typeText(dateString));
 
@@ -53,9 +53,9 @@ public class ActivityTests {
         onView(withId(R.id.endDate)).perform(typeText(dateString));
 
         // Find search button and click it
-        onView(withId(R.id.searchView)).perform(click());
+        onView(withId(R.id.submitSearch)).perform(click());
 
-        // Should only have 1 result
-        //onView(withId(R.id.searchActivity)).check(new RecyclerViewItemCountAssertion(1));
+        // Test to see if the Search Activity is in foreground
+        onView(withId(R.id.mainActivity)).check(matches(isDisplayed()));
     }
 }
