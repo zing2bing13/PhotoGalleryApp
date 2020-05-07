@@ -44,8 +44,8 @@ public class ActivityTests {
         // Test to see if the Search Activity is in foreground
         onView(withId(R.id.searchActivity)).check(matches(isDisplayed()));
 
-        String dateString = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
-
+        String dateString = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        
         // Find the start date text button and enter a date string
         onView(withId(R.id.startDate)).perform(typeText(dateString));
 
