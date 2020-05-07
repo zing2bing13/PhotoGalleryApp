@@ -47,67 +47,81 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!--    <TextView-->
-    <!--        android:id="@+id/imageCaption"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="19dp"-->
-    <!--        android:layout_marginStart="160dp"-->
-    <!--        android:layout_marginTop="16dp"-->
-    <!--        android:layout_marginEnd="160dp"-->
-    <!--        android:text="@string/text_timestamp"-->
-    <!--        android:textAlignment="center"-->
-    <!--        android:textColor="@color/colorFontDark"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toBottomOf="@+id/button2" />-->
-
-    <EditText
-        android:id="@+id/imageCaption"
-        android:layout_width="200dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="16dp"
-        android:background="@null"
-        android:drawableRight="@drawable/ic_edit"
-        android:drawablePadding="5dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:paddingLeft="16dp"
-        android:text="TIMESTAMP"
-        android:hint="Image caption"
-        android:textColor="@color/colorFontDark"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonSearch" />
+        <TextView
+            android:id="@+id/timeStamp"
+            android:layout_width="wrap_content"
+            android:layout_height="19dp"
+            android:layout_marginStart="160dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="160dp"
+            android:text="@string/text_timestamp"
+            android:textAlignment="center"
+            android:textColor="@color/colorFontDark"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonRight" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="379dp"
         android:layout_height="358dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/imageCaption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timeStamp"
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+    <Button
+        android:id="@+id/gallery"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginLeft="32dp"
+        android:background="@drawable/ic_gallery"
+        app:layout_constraintLeft_toLeftOf="@id/imageView"
+        app:layout_constraintRight_toLeftOf="@id/imageCaption"
+        app:layout_constraintTop_toTopOf="@+id/imageCaption" />
+
+      
+      <EditText
+        android:id="@+id/imageCaption"
+        android:layout_width="250dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="48dp"
+        android:background="@null"
+        android:drawableRight="@drawable/ic_edit"
+        android:drawablePadding="5dp"
+        android:ems="10"
+        android:hint="Image caption"
+        android:inputType="textPersonName"
+        android:paddingLeft="16dp"
+        android:text="TIMESTAMP"
+        android:textColor="@color/colorFontDark"
+        android:textSize="14sp"
+        android:imeOptions="actionDone" 
         app:layout_constraintBottom_toTopOf="@+id/snapButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageCaption"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        app:layout_constraintStart_toEndOf="@+id/gallery"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <ImageButton
         android:id="@+id/snapButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="44dp"
+        android:layout_marginBottom="40dp"
         android:background="@drawable/round_button"
         android:src="@drawable/ic_camera"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/imageCaption" />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
