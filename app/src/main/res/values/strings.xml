@@ -9,4 +9,10 @@
     <string name="search_hint_startDate">Start Date</string>
     <string name="search_hint_endDate">End Date</string>
     <string name="search_hint_time">Time</string>
+    <string name="errorCreatingImage">Error when creating new image file</string>
+    <string name="cameraPermissionGranted">camera permission granted</string>
+    <string name="cameraPermissionDenied">Cannot use the camera without permission</string>
+    <string name="errorReadingGalleryPhoto">Error when read the photo gallery</string>
+    <string name="NoPhotoChosen">No photo chosen from gallery</string>
+    <string name="search_hint_caption">Caption</string>
 </resources>
