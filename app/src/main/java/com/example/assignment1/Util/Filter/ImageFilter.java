@@ -48,7 +48,14 @@ public class ImageFilter implements Serializable {
 
         // If caption filter exist add a filer for caption
         if(this.Caption != null) {
-            filters.add(f -> f.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION).contains(this.Caption));
+            filters.add(f -> {
+                String imageCaption = f.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+                if(imageCaption != null) {
+                    return imageCaption.toLowerCase().contains(this.Caption.toLowerCase());
+                } else {
+                    return false;
+                }
+            });
         }
 
         return filters;

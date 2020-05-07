@@ -44,13 +44,15 @@ public class ActivityTests {
         // Test to see if the Search Activity is in foreground
         onView(withId(R.id.searchActivity)).check(matches(isDisplayed()));
 
-        String dateString = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        
+        //String dateString = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
         // Find the start date text button and enter a date string
-        onView(withId(R.id.startDate)).perform(typeText(dateString));
+        //onView(withId(R.id.startDate)).perform(typeText(dateString));
 
         // Find the end date text button and enter today's date
-        onView(withId(R.id.endDate)).perform(typeText(dateString));
+        //onView(withId(R.id.endDate)).perform(typeText(dateString));
+
+        onView(withId(R.id.searchView)).perform(typeText("Test"));
 
         // Find search button and click it
         onView(withId(R.id.submitSearch)).perform(click());

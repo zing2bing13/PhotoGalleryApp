@@ -602,13 +602,18 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bitmap = BitmapFactory.decodeStream(imageStream, null, setPicBitmapFactoryOption());
                 imageView.setImageBitmap(bitmap);
 
-                //Hidden the image caption if no image yet
                 currentImageCaption.setVisibility(View.VISIBLE);
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
             } catch (Exception ex){
                 ex.printStackTrace();
             }
+        }
+        else {
+            currentImageCaption.setVisibility(View.INVISIBLE);
+            nextPhotoBtn.setVisibility(View.INVISIBLE);
+            previousPhotoBtn.setVisibility(View.INVISIBLE);
+            imageView.setVisibility(View.INVISIBLE);
         }
     }
 }

@@ -70,7 +70,7 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         // Get the caption text
-        //filter.Caption = ((EditText)findViewById(R.id.searchView)).getText().toString();
+        filter.Caption = ((EditText)findViewById(R.id.searchView)).getText().toString();
 
         // Get intent
         Intent intent = getIntent();
