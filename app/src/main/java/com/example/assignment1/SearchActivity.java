@@ -46,7 +46,7 @@ public class SearchActivity extends AppCompatActivity {
         String startDateString = ((EditText)findViewById(R.id.startDate)).getText().toString();
         if (startDateString.length() > 1) {
             // If we have a date, try to parse it
-            Date parseDate = TryParseDate(startDateString+ " " + ((EditText)findViewById(R.id.startTime)).getText().toString());
+            Date parseDate = TryParseDate(startDateString + " " + ((EditText)findViewById(R.id.startTime)).getText().toString());
             // If parse was successful, get add a filter for our start date
             filter.StartDate = parseDate;
         }
@@ -55,7 +55,7 @@ public class SearchActivity extends AppCompatActivity {
         String endDateString = ((EditText)findViewById(R.id.endDate)).getText().toString();
         if (endDateString.length() > 1) {
             // If we have a date, try to parse it
-            Date parseDate = TryParseDate(endDateString+ " " + ((EditText)findViewById(R.id.endTime)).getText().toString());
+            Date parseDate = TryParseDate(endDateString + " " + ((EditText)findViewById(R.id.endTime)).getText().toString());
             // If parse was successful, get add a filter for our start date
             if(parseDate != null) {
                 filter.EndDate = parseDate;

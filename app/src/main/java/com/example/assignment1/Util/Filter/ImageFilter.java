@@ -16,7 +16,7 @@ public class ImageFilter implements Serializable {
     public Date StartDate;
     public Date EndDate;
     public String Caption;
-    private final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
     /***
      * Gets a list of filters to filter with
      * @return a list of filters
@@ -26,7 +26,7 @@ public class ImageFilter implements Serializable {
 
         // If start date exist add a filter for the start date
         if (this.StartDate != null) {
-            filters.add(f -> {
+            filters.add( f -> {
                 try {
                     return new SimpleDateFormat(DATE_FORMAT).parse(f.ExifData.getAttribute(ExifInterface.TAG_DATETIME)).compareTo(this.StartDate) > 0;
                 } catch (ParseException ex) {
@@ -46,13 +46,17 @@ public class ImageFilter implements Serializable {
             });
         }
 
-        // If caption filter exist add a filer for caption
-        if(this.Caption != null) {
+        // If caption filter exist add a filter for caption
+        if(this.Caption != null && this.Caption.length() != 0) {
             filters.add(f -> {
-                String imageCaption = f.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
-                if(imageCaption != null) {
-                    return imageCaption.toLowerCase().contains(this.Caption.toLowerCase());
-                } else {
+                try {
+                    String imageCaption = f.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+                    if (imageCaption != null) {
+                        return imageCaption.toLowerCase().contains(this.Caption.toLowerCase());
+                    } else {
+                        return false;
+                    }
+                } catch (Exception e) {
                     return false;
                 }
             });
