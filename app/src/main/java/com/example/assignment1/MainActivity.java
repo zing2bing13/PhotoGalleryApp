@@ -172,16 +172,22 @@ public class MainActivity extends AppCompatActivity {
 
     //Left arrow button listener
     public void onPreviousPhotoBtnClicked(View v){
-        File file = new File(currentPhotoPath);
-        String filename = file.getName();
-        getPhotoFromArray("back",filename);
+        try {
+            File file = new File(currentPhotoPath);
+            String filename = file.getName();
+            getPhotoFromArray("back", filename);
+        } catch (Exception e) {
+        }
     }
 
     //Right arrow button listener
     public void onNextPhotoBtnClicked(View v){
-        File file = new File(currentPhotoPath);
-        String filename = file.getName();
-        getPhotoFromArray("fwd",filename);
+        try {
+            File file = new File(currentPhotoPath);
+            String filename = file.getName();
+            getPhotoFromArray("fwd", filename);
+        } catch (Exception e){
+        }
     }
 
     //Take Photo Button Listener
@@ -379,9 +385,9 @@ public class MainActivity extends AppCompatActivity {
     private static String getTimeStamp(String filepath){
         File file = new File(filepath);
         //get image taken timestamp to textview
-        Long lastmodied= file.lastModified();
+        Long lastmodified= file.lastModified();
         //String dateTaken = getTimeStamp(this, date);
-        Date d = new Date(lastmodied);
+        Date d = new Date(lastmodified);
         String dateTaken = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(d);
         return dateTaken;
     }
@@ -654,6 +660,7 @@ public class MainActivity extends AppCompatActivity {
                 previousPhotoBtn.setVisibility(View.VISIBLE);
                 currentImageCaption.setText(result.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION));
                 currentTimeStamp.setText("");
+                imageView.setVisibility(View.VISIBLE);
             } catch (Exception ex){
                 ex.printStackTrace();
             }
