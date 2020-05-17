@@ -10,6 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
@@ -29,36 +30,44 @@ public class ImageFilter implements Serializable {
         // Issue with parsing the EXIF data from the image to convert it to a format Date can compare to
         // If start date exist add a filter for the start date
         if (this.StartDate != null) {
-            filters.add( f -> {
-                try {
+            filters.add(f -> {
 
+                try {
                     String dateString = f.ExifData.getAttribute(ExifInterface.TAG_DATETIME);
-                    Log.d("error_date", f.ExifData.getAttribute(ExifInterface.TAG_DATETIME));
 
                     String dateParts[] = dateString.split("[: ]");
-                    Log.d("dateString_length", dateParts[0]);
                     int year = Integer.parseInt(dateParts[0]);
                     int month = Integer.parseInt(dateParts[1]);
                     int day = Integer.parseInt(dateParts[2]);
                     int hour = Integer.parseInt(dateParts[3]);
                     int minute = Integer.parseInt(dateParts[4]);
                     int second = Integer.parseInt(dateParts[5]);
+                    month = month - 1; //month is zero-based index
 
-                    SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-                    Date imageDate = new Date(year, month, day, hour, minute, second);
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DATE, day);
+                    calendar.set(Calendar.HOUR, hour);
+                    calendar.set(Calendar.MINUTE, minute);
+                    calendar.set(Calendar.SECOND, second);
+                    Date imageDate = calendar.getTime();
+
                     //Log.d("new_date", imageDate.toString());
-                    //imageDate = sdf.format(imageDate);
 
-                    Log.d("error_date", f.ExifData.getAttribute(ExifInterface.TAG_DATETIME));
+                    //Log.d("error_date", f.ExifData.getAttribute(ExifInterface.TAG_DATETIME));
                     SimpleDateFormat date = new SimpleDateFormat(DATE_FORMAT);
-                    date.parse(f.ExifData.getAttribute(ExifInterface.TAG_DATETIME));
-                    Log.d("error_date", date.toString());
-                    Log.d("split_date", imageDate.toString());
+                    date.format(imageDate);
 
-                    return new SimpleDateFormat(DATE_FORMAT).format(imageDate).compareTo(this.StartDate.toString()) > 0;
-                } catch (ParseException ex) {
-                    return false;
+                    if (imageDate.compareTo(this.StartDate) > 0) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+            } catch (Exception ex) {
                 }
+                return false;
             });
         }
 
@@ -66,10 +75,40 @@ public class ImageFilter implements Serializable {
         if (this.EndDate != null) {
             filters.add(f -> {
                 try {
-                    return new SimpleDateFormat(DATE_FORMAT).parse(f.ExifData.getAttribute(ExifInterface.TAG_DATETIME)).compareTo(this.EndDate) < 0;
-                } catch (ParseException ex) {
-                    return false;
-                }
+                    String dateString = f.ExifData.getAttribute(ExifInterface.TAG_DATETIME);
+
+                    String dateParts[] = dateString.split("[: ]");
+                    int year = Integer.parseInt(dateParts[0]);
+                    int month = Integer.parseInt(dateParts[1]);
+                    int day = Integer.parseInt(dateParts[2]);
+                    int hour = Integer.parseInt(dateParts[3]);
+                    int minute = Integer.parseInt(dateParts[4]);
+                    int second = Integer.parseInt(dateParts[5]);
+                    month = month - 1; // month is zero-based index
+
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DATE, day);
+                    calendar.set(Calendar.HOUR, hour);
+                    calendar.set(Calendar.MINUTE, minute);
+                    calendar.set(Calendar.SECOND, second);
+                    Date imageDate = calendar.getTime();
+
+                    //Log.d("new_date", imageDate.toString());
+
+                    //Log.d("error_date", f.ExifData.getAttribute(ExifInterface.TAG_DATETIME));
+                    SimpleDateFormat date = new SimpleDateFormat(DATE_FORMAT);
+                    date.format(imageDate);
+
+                    if (imageDate.compareTo(this.EndDate) < 0) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (Exception ex) {
+                    }
+                return false;
             });
         }
 
