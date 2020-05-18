@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //get all filepath in the picture folder
-    protected ArrayList<String> getAllFilePaths(){
+    public ArrayList<String> getAllFilePaths(){
         Uri u = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = {MediaStore.Images.ImageColumns.DATA};
         Cursor c = null;
@@ -425,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private static ArrayList<String> getFilePaths(Activity activity){
+    public ArrayList<String> getFilePaths(Activity activity){
         Uri uri;
         Cursor cursor;
         int column_index;
@@ -552,7 +552,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    private void setExifAttr(String path, String tag, String value) {
+    public static void setExifAttr(String path, String tag, String value) {
         try {
             ExifInterface exif = new ExifInterface(path);
             exif.setAttribute(tag, value);
