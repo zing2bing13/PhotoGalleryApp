@@ -122,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Share photo button clicked
+
+
         /*//empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
