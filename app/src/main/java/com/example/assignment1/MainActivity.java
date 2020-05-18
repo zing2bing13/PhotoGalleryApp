@@ -4,7 +4,9 @@ package com.example.assignment1;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.app.Activity;
@@ -82,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         this.currentTimeStamp = (TextView) this.findViewById(R.id.timeStamp);
         ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
         Button galleryButton = (Button)this.findViewById(R.id.gallery);
+        Button shareButton = (Button)this.findViewById(R.id.shareButton);
         this.previousPhotoBtn = (Button)this.findViewById(R.id.buttonLeft);
         this.nextPhotoBtn = (Button)this.findViewById(R.id.buttonRight);
 
@@ -112,6 +115,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Share photo button clicked
+        shareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onShareBtnClicked(v);
+            }
+        });
+
         //Take photo button clicked
         snapButton.setOnClickListener(new View.OnClickListener()
         {
@@ -121,9 +132,6 @@ public class MainActivity extends AppCompatActivity {
                 onTakePhotoClicked(v);
             }
         });
-
-        //Share photo button clicked
-
 
         /*//empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -190,6 +198,34 @@ public class MainActivity extends AppCompatActivity {
             String filename = file.getName();
             getPhotoFromArray("fwd", filename);
         } catch (Exception e){
+        }
+    }
+
+    //Share button listener
+    public void onShareBtnClicked(View v) {
+        String FILES_AUTHORITY = "com.example.assignment1.fileprovider";
+
+        try {
+            File file = new File(currentPhotoPath);
+            Uri uriToImage = FileProvider.getUriForFile(
+                    getApplicationContext(),
+                    FILES_AUTHORITY,
+                    file);
+
+            Intent shareIntent = ShareCompat.IntentBuilder.from(this).setStream(uriToImage).getIntent();
+
+            // Provide read access
+            shareIntent.setData(uriToImage);
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            //Intent shareIntent = new Intent();
+            //shareIntent.setAction(Intent.ACTION_SEND);
+            //shareIntent.putExtra(Intent.EXTRA_STREAM, uriToImage);
+            //shareIntent.setType("image/jpeg");
+
+            startActivity(Intent.createChooser(shareIntent, "Share image to..."));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

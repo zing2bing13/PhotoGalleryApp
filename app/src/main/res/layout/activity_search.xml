@@ -41,10 +41,10 @@
         android:inputType="date"
         android:clickable="true"
         android:focusable="false"
-        android:onClick="onStartDateClick"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
+        <!-- android:onClick="onStartDateClick" />-->
 
     <EditText
         android:id="@+id/startTime"
@@ -58,11 +58,11 @@
         android:inputType="time"
         android:clickable="true"
         android:focusable="false"
-        android:onClick="onStartTimeClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/startDate"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
+        <!-- android:onClick="onStartTimeClick" />-->
 
     <EditText
         android:id="@+id/endDate"
@@ -75,10 +75,10 @@
         android:inputType="date"
         android:clickable="true"
         android:focusable="false"
-        android:onClick="onEndDateClick"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startDate"
         android:importantForAutofill="no" />
+        <!-- android:onClick="onEndDateClick" /> -->
 
     <EditText
         android:id="@+id/endTime"
@@ -92,11 +92,11 @@
         android:inputType="time"
         android:clickable="true"
         android:focusable="false"
-        android:onClick="onEndTimeClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/endDate"
         app:layout_constraintTop_toBottomOf="@+id/startTime"
         android:importantForAutofill="no" />
+        <!-- android:onClick="onEndTimeClick" /> -->
 
     <Button
         android:id="@+id/submitSearch"
@@ -110,6 +110,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/endDate" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
