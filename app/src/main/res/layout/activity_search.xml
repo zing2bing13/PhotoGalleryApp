@@ -42,6 +42,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onStartDateClick" />
+        -->
 
     <EditText
         android:id="@+id/startTime"
@@ -57,6 +62,11 @@
         app:layout_constraintStart_toEndOf="@+id/startDate"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onStartTimeClick" />
+        -->
 
     <EditText
         android:id="@+id/endDate"
@@ -70,6 +80,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startDate"
         android:importantForAutofill="no" />
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onEndDateClick" />
+        -->
 
     <EditText
         android:id="@+id/endTime"
@@ -85,6 +100,11 @@
         app:layout_constraintStart_toEndOf="@+id/endDate"
         app:layout_constraintTop_toBottomOf="@+id/startTime"
         android:importantForAutofill="no" />
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onEndTimeClick" />
+        -->
 
     <Button
         android:id="@+id/submitSearch"
@@ -98,6 +118,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/endDate" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
