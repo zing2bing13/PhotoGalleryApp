@@ -39,12 +39,14 @@
         android:ems="10"
         android:hint="@string/search_hint_startDate"
         android:inputType="date"
-        android:clickable="true"
-        android:focusable="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
-        <!-- android:onClick="onStartDateClick" />-->
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onStartDateClick" />
+        -->
 
     <EditText
         android:id="@+id/startTime"
@@ -56,13 +58,15 @@
         android:ems="10"
         android:hint="@string/search_hint_time"
         android:inputType="time"
-        android:clickable="true"
-        android:focusable="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/startDate"
         app:layout_constraintTop_toBottomOf="@+id/searchView"
         android:importantForAutofill="no" />
-        <!-- android:onClick="onStartTimeClick" />-->
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onStartTimeClick" />
+        -->
 
     <EditText
         android:id="@+id/endDate"
@@ -73,12 +77,14 @@
         android:ems="10"
         android:hint="@string/search_hint_endDate"
         android:inputType="date"
-        android:clickable="true"
-        android:focusable="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startDate"
         android:importantForAutofill="no" />
-        <!-- android:onClick="onEndDateClick" /> -->
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onEndDateClick" />
+        -->
 
     <EditText
         android:id="@+id/endTime"
@@ -90,13 +96,15 @@
         android:ems="10"
         android:hint="@string/search_hint_time"
         android:inputType="time"
-        android:clickable="true"
-        android:focusable="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/endDate"
         app:layout_constraintTop_toBottomOf="@+id/startTime"
         android:importantForAutofill="no" />
-        <!-- android:onClick="onEndTimeClick" /> -->
+        <!--
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="onEndTimeClick" />
+        -->
 
     <Button
         android:id="@+id/submitSearch"
