@@ -4,6 +4,7 @@ package com.example.assignment1;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
@@ -29,6 +30,7 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -53,6 +55,9 @@ import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -90,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CHECK_SETTINGS = 100;
     private static final int REQUEST_GRANT_PERMISSION = 2;
     private TextView longitude;
+    private TextView latitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,16 +103,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //set layout components
-        this.imageView = (ImageView)this.findViewById(R.id.imageView);
-        this.currentImageCaption = (EditText)this.findViewById(R.id.imageCaption);
+        this.imageView = (ImageView) this.findViewById(R.id.imageView);
+        this.currentImageCaption = (EditText) this.findViewById(R.id.imageCaption);
         this.currentTimeStamp = (TextView) this.findViewById(R.id.timeStamp);
-        ImageButton snapButton = (ImageButton)this.findViewById(R.id.snapButton);
-        Button galleryButton = (Button)this.findViewById(R.id.gallery);
-        Button shareButton = (Button)this.findViewById(R.id.shareButton);
-        this.previousPhotoBtn = (Button)this.findViewById(R.id.buttonLeft);
-        this.nextPhotoBtn = (Button)this.findViewById(R.id.buttonRight);
-        this.longitude = (TextView)this.findViewById(R.id.longtitude);
-        this.tagBtn = (Button)this.findViewById(R.id.tagButton);
+        FloatingActionButton snapButton = (FloatingActionButton) this.findViewById(R.id.fab);
+        Button galleryButton = (Button) this.findViewById(R.id.gallery);
+        this.previousPhotoBtn = (Button) this.findViewById(R.id.buttonLeft);
+        this.nextPhotoBtn = (Button) this.findViewById(R.id.buttonRight);
+        this.longitude = (TextView) this.findViewById(R.id.longitude);
+        this.latitude = (TextView) this.findViewById(R.id.latitude);
+        BottomNavigationView bottomNav = (BottomNavigationView) findViewById(R.id.bottom_nav_view);
 
         //read photos from gallery
         //readPhotoGallery();
@@ -135,23 +141,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Share photo button clicked
-        shareButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onShareBtnClicked(v);
-            }
-        });
 
         //Take photo button clicked
-        snapButton.setOnClickListener(new View.OnClickListener()
-        {
+        snapButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View v) {
                 onTakePhotoClicked(v);
             }
         });
+
 
         /*//empty default image caption when focusing
         currentImageCaption.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -169,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
         currentImageCaption.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(currentPhotoPath != null) {
+                if (currentPhotoPath != null) {
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
                         setExifAttr(currentPhotoPath,
                                 ExifInterface.TAG_IMAGE_DESCRIPTION,
@@ -194,12 +193,24 @@ public class MainActivity extends AppCompatActivity {
         createLocationRequest();
         settingsCheck();
 
-        tagBtn.setOnClickListener(new View.OnClickListener() {
+
+        bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
-            public void onClick(View v) {
-                setLocationListener(v);
-                longitude.setVisibility(View.VISIBLE);
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.tagButton:
+                        setLocationListener();
+                        longitude.setVisibility(View.VISIBLE);
+                        latitude.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.shareButton:
+                        onShareBtnClicked();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
             }
         });
     }
@@ -226,9 +237,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private void setLocationListener(View v){
+    private void setLocationListener(){
         getLocation();
-        longitude.setText("latitude "+currentLocation.getLatitude() + " longitude "+currentLocation.getLongitude());
+        latitude.setText("latitude "+currentLocation.getLongitude());
+        longitude.setText("longitude "+currentLocation.getLongitude());
     }
 
     protected void createLocationRequest() {
@@ -324,7 +336,8 @@ public class MainActivity extends AppCompatActivity {
                     currentLocation=location;
                     //Log.d("TAG", "onLocationResult: "+currentLocation.getLatitude());
                     //Log.d("TAG", "onSuccess:longitude "+currentLocation.getLongitude());
-                    longitude.setText("latitude "+location.getLatitude() + " longitude "+location.getLongitude());
+                    //latitude.setText("latitude "+currentLocation.getLongitude());
+                    //longitude.setText("longitude "+currentLocation.getLongitude());
                 }
             };
         };
@@ -367,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Share button listener
-    public void onShareBtnClicked(View v) {
+    public void onShareBtnClicked() {
         String FILES_AUTHORITY = "com.example.assignment1.fileprovider";
 
         try {
@@ -656,6 +669,7 @@ public class MainActivity extends AppCompatActivity {
             //Return the image from gallery to bitmap (gallery)
             getPhotoFromGallery(data);
             longitude.setVisibility(View.INVISIBLE);
+            latitude.setVisibility(View.INVISIBLE);
 
         } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
             //Return the encoded photo as a small bitmap under the key "data" (camera)
@@ -691,6 +705,7 @@ public class MainActivity extends AppCompatActivity {
             }
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
             longitude.setVisibility(View.INVISIBLE);
+            latitude.setVisibility(View.INVISIBLE);
         }
 
         else if (requestCode == REQUEST_CHECK_SETTINGS && resultCode == RESULT_OK){
