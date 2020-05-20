@@ -128,5 +128,22 @@
         app:layout_constraintRight_toRightOf="@id/imageView"
         app:layout_constraintTop_toTopOf="@+id/imageCaption" />
 
+    <TextView
+        android:id="@+id/longtitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gallery" />
+
+    <Button
+        android:id="@+id/tagButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="17dp"
+        android:text="Button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/longtitude" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

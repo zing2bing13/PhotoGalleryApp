@@ -1,11 +1,11 @@
 package com.example.assignment1;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import android.Manifest;
@@ -14,16 +14,18 @@ import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.media.ExifInterface;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -39,13 +41,23 @@ import android.widget.Toast;
 import com.example.assignment1.Models.ImageExifModel;
 import com.example.assignment1.Util.Filter.Filter;
 import com.example.assignment1.Util.Filter.ImageFilter;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_TAKE_PHOTO = 228;
     private static final int MY_PERMISSION_ALL = 1;
-    private static final int MY_CAMERA_PERMISSION_CODE = 100;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 101;
     static final int GET_FILTERS = 3;
     private Uri mPicCaptureUri = null;
@@ -71,7 +82,19 @@ public class MainActivity extends AppCompatActivity {
     private TextView currentTimeStamp;
     private Button previousPhotoBtn;
     private Button nextPhotoBtn;
-
+    private Button tagBtn;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationRequest locationRequest;
+    private Location currentLocation;
+    private LocationCallback locationCallback;
+    private static final int REQUEST_CHECK_SETTINGS = 1;
+    private static final int REQUEST_GRANT_PERMISSION = 2;
+    private TextView longitude;
+    private String[] permissionRequests = {Manifest.permission.CAMERA,
+                                           Manifest.permission.READ_EXTERNAL_STORAGE,
+                                           Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                           Manifest.permission.ACCESS_COARSE_LOCATION,
+                                           Manifest.permission.ACCESS_FINE_LOCATION};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
         Button shareButton = (Button)this.findViewById(R.id.shareButton);
         this.previousPhotoBtn = (Button)this.findViewById(R.id.buttonLeft);
         this.nextPhotoBtn = (Button)this.findViewById(R.id.buttonRight);
+        this.longitude = (TextView)this.findViewById(R.id.longtitude);
+        this.tagBtn = (Button)this.findViewById(R.id.tagButton);
 
         //read photos from gallery
         //readPhotoGallery();
@@ -167,10 +192,146 @@ public class MainActivity extends AppCompatActivity {
 
         nextPhotoBtn.setVisibility(View.INVISIBLE);
         previousPhotoBtn.setVisibility(View.INVISIBLE);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        createLocationRequest();
+        settingsCheck();
+
+        tagBtn.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(View v) {
+                setLocationListener(v);
+            }
+        });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void setLocationListener(View v){
+
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Explain to the user why we need to read the contacts
+            }
+
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_GRANT_PERMISSION);
+        }
+        if(locationCallback==null)
+            buildLocationCallback();
+        if(currentLocation==null)
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+    }
+
+    protected void createLocationRequest() {
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    // Check for location settings
+    public void settingsCheck() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                // All location settings are satisfied. The client can initialize
+                // location requests here.
+                Log.d("TAG", "onSuccess: settingsCheck");
+                getCurrentLocation();
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (e instanceof ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed
+                    // by showing the user a dialog.
+                    Log.d("TAG", "onFailure: settingsCheck");
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
+                        resolvable.startResolutionForResult(MainActivity.this,
+                                REQUEST_CHECK_SETTINGS);
+                    } catch (IntentSender.SendIntentException sendEx) {
+                        // Ignore the error.
+                    }
+                }
+            }
+        });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getCurrentLocation(){
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Explain to the user why we need to read the contacts
+            }
+
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_GRANT_PERMISSION);
+        }
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        Log.d("TAG", "onSuccess: getLastLocation");
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            currentLocation=location;
+                            //Log.d("TAG", "onSuccess:latitude "+location.getLatitude());
+                            //Log.d("TAG", "onSuccess:longitude "+location.getLongitude());
+                            longitude.setText("latitude "+location.getLatitude() + " longitude "+location.getLongitude());
+                        }else{
+                            Log.d("TAG", "location is null");
+                            buildLocationCallback();
+                        }
+                    }
+                });
+    }
+
+    private void buildLocationCallback() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+                    currentLocation=location;
+                    //Log.d("TAG", "onLocationResult: "+currentLocation.getLatitude());
+                    //Log.d("TAG", "onSuccess:longitude "+currentLocation.getLongitude());
+                    longitude.setText("latitude "+location.getLatitude() + " longitude "+location.getLongitude());
+                }
+            };
+        };
+    }
+
+    public static String locationStringFromLocation(Location location) {
+        return Location.convert(location.getLatitude(), Location.FORMAT_DEGREES)
+                + " " + Location.convert(location.getLongitude(), Location.FORMAT_DEGREES);
+    }
     //Check whether all the permissions has been granted
-    public static boolean hasPermissions(Context context, String... permissions){
+    public static boolean hasPermissions(View.OnClickListener context, String... permissions){
         if(context != null && permissions != null){
             for(String permission: permissions){
                 if(ActivityCompat.checkSelfPermission((Context) context, permission) != PackageManager.PERMISSION_GRANTED){
@@ -232,14 +393,7 @@ public class MainActivity extends AppCompatActivity {
     //Take Photo Button Listener
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onTakePhotoClicked(View v){
-        String[] permissionRequests = {Manifest.permission.CAMERA,
-                                       Manifest.permission.READ_EXTERNAL_STORAGE,
-                                       Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                        Manifest.permission.ACCESS_MEDIA_LOCATION,
-                                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                                        Manifest.permission.ACCOUNT_MANAGER,
-                Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS};
-        if(!hasPermissions(this, permissionRequests)){
+        if(!hasPermissions((View.OnClickListener) this, permissionRequests)){
             ActivityCompat.requestPermissions(this, permissionRequests, MY_PERMISSION_ALL);
         }else{
             dispatchTakePictureIntent();
@@ -247,24 +401,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Handle the permissions request response
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissionsList[], int[] grantResults){
+
         switch(requestCode){
             case MY_PERMISSION_ALL:{
                 if(grantResults.length > 0){
-                    if(grantResults.length > 0){
-                        for(String per : permissionsList){
-                            if(grantResults[0] == PackageManager.PERMISSION_GRANTED
-                                    && grantResults[1] == PackageManager.PERMISSION_GRANTED
-                                    && grantResults[2] == PackageManager.PERMISSION_GRANTED){
-                                dispatchTakePictureIntent();
-                            }
-                            return;
+                    for(String per : permissionsList){
+                        if(grantResults[0] == PackageManager.PERMISSION_GRANTED
+                                && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                                && grantResults[2] == PackageManager.PERMISSION_GRANTED){
+                            dispatchTakePictureIntent();
+
                         }
+                        return;
                     }
+
                 }
             }
         }
+        /*super.onRequestPermissionsResult(requestCode, permissionsList, grantResults);
+        if(requestCode==REQUEST_GRANT_PERMISSION){
+            getCurrentLocation();
+        }*/
     }
 
     //Start the camera external activity and handle image intent
@@ -492,7 +652,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK) {
+        if (requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK) {
             //Return the image from gallery to bitmap (gallery)
             getPhotoFromGallery(data);
 
@@ -529,12 +689,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
-        }
-
-        //If no recent photo
+        } //If no recent photo
         else{
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
         }
+
+        if (requestCode == REQUEST_CHECK_SETTINGS && resultCode == RESULT_OK){
+            getCurrentLocation();
+        }
+        else if(requestCode==REQUEST_CHECK_SETTINGS && resultCode==RESULT_CANCELED){
+            Toast.makeText(this, "Please enable Location settings...!!!", Toast.LENGTH_SHORT).show();
+        }
+
     }
           
     //Decode the image scale
