@@ -87,14 +87,9 @@ public class MainActivity extends AppCompatActivity {
     private LocationRequest locationRequest;
     private Location currentLocation;
     private LocationCallback locationCallback;
-    private static final int REQUEST_CHECK_SETTINGS = 1;
+    private static final int REQUEST_CHECK_SETTINGS = 100;
     private static final int REQUEST_GRANT_PERMISSION = 2;
     private TextView longitude;
-    private String[] permissionRequests = {Manifest.permission.CAMERA,
-                                           Manifest.permission.READ_EXTERNAL_STORAGE,
-                                           Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                           Manifest.permission.ACCESS_COARSE_LOCATION,
-                                           Manifest.permission.ACCESS_FINE_LOCATION};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -193,6 +188,8 @@ public class MainActivity extends AppCompatActivity {
         nextPhotoBtn.setVisibility(View.INVISIBLE);
         previousPhotoBtn.setVisibility(View.INVISIBLE);
 
+        longitude.setVisibility(View.INVISIBLE);
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
         settingsCheck();
@@ -202,13 +199,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 setLocationListener(v);
+                longitude.setVisibility(View.VISIBLE);
             }
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void setLocationListener(View v){
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void getLocation(){
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
@@ -225,6 +223,12 @@ public class MainActivity extends AppCompatActivity {
             buildLocationCallback();
         if(currentLocation==null)
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void setLocationListener(View v){
+        getLocation();
+        longitude.setText("latitude "+currentLocation.getLatitude() + " longitude "+currentLocation.getLongitude());
     }
 
     protected void createLocationRequest() {
@@ -299,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                             currentLocation=location;
                             //Log.d("TAG", "onSuccess:latitude "+location.getLatitude());
                             //Log.d("TAG", "onSuccess:longitude "+location.getLongitude());
-                            longitude.setText("latitude "+location.getLatitude() + " longitude "+location.getLongitude());
+                            //longitude.setText("latitude "+location.getLatitude() + " longitude "+location.getLongitude());
                         }else{
                             Log.d("TAG", "location is null");
                             buildLocationCallback();
@@ -331,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
                 + " " + Location.convert(location.getLongitude(), Location.FORMAT_DEGREES);
     }
     //Check whether all the permissions has been granted
-    public static boolean hasPermissions(View.OnClickListener context, String... permissions){
+    public static boolean hasPermissions(Context context, String... permissions){
         if(context != null && permissions != null){
             for(String permission: permissions){
                 if(ActivityCompat.checkSelfPermission((Context) context, permission) != PackageManager.PERMISSION_GRANTED){
@@ -393,7 +397,10 @@ public class MainActivity extends AppCompatActivity {
     //Take Photo Button Listener
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onTakePhotoClicked(View v){
-        if(!hasPermissions((View.OnClickListener) this, permissionRequests)){
+        String[] permissionRequests = {Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        if(!hasPermissions(this, permissionRequests)){
             ActivityCompat.requestPermissions(this, permissionRequests, MY_PERMISSION_ALL);
         }else{
             dispatchTakePictureIntent();
@@ -413,7 +420,6 @@ public class MainActivity extends AppCompatActivity {
                                 && grantResults[1] == PackageManager.PERMISSION_GRANTED
                                 && grantResults[2] == PackageManager.PERMISSION_GRANTED){
                             dispatchTakePictureIntent();
-
                         }
                         return;
                     }
@@ -421,15 +427,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        /*super.onRequestPermissionsResult(requestCode, permissionsList, grantResults);
-        if(requestCode==REQUEST_GRANT_PERMISSION){
-            getCurrentLocation();
-        }*/
     }
 
     //Start the camera external activity and handle image intent
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         //Return the activity component to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             //Create the File where the photo should go
@@ -444,7 +448,7 @@ public class MainActivity extends AppCompatActivity {
 
             //Continue only if the File was successfully created
             if(photoFile != null){
-                ContentValues values = new ContentValues(4);
+                ContentValues values = new ContentValues(5);
                 /*
                 String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());*/
                 Long lastmodified= photoFile.lastModified();
@@ -457,7 +461,6 @@ public class MainActivity extends AppCompatActivity {
                 values.put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName);
                 values.put(MediaStore.Images.Media.DATE_TAKEN, timeStamp);
                 values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-
                 //get a file reference
                 Uri insertUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
                 mPicCaptureUri = insertUri;
@@ -591,23 +594,20 @@ public class MainActivity extends AppCompatActivity {
         return dateTaken;
     }
 
-    //get image taken timestamp from file path
-    private static String getTimeStamp(Context context, Uri uri){
+    /*
+    private String getImageLocation(Context context, Uri uri){
         String result = null;
-        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
-        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DATE_TAKEN);
+        String[] projection = {MediaStore.Images.Media.DESCRIPTION};
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, MediaStore.Images.Media.DESCRIPTION);
         if(cursor != null){
             if(cursor.moveToFirst()){
-                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN);
-                long longDate = cursor.getLong(columnIndex);
-                Date d = new Date(longDate);
-                result = new SimpleDateFormat("MM/dd/yyyy HH:mm").format(d);
-
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DESCRIPTION);
+                result = cursor.getString(columnIndex);
             }
             cursor.close();
         }
         return result;
-    }
+    }*/
 
     //get image file path from file path
     private static String getFilePath(Context context, Uri uri){
@@ -655,6 +655,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == RESULT_LOAD_IMG && resultCode == Activity.RESULT_OK) {
             //Return the image from gallery to bitmap (gallery)
             getPhotoFromGallery(data);
+            longitude.setVisibility(View.INVISIBLE);
 
         } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK) {
             //Return the encoded photo as a small bitmap under the key "data" (camera)
@@ -689,18 +690,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
-        } //If no recent photo
-        else{
-            Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
+            longitude.setVisibility(View.INVISIBLE);
         }
 
-        if (requestCode == REQUEST_CHECK_SETTINGS && resultCode == RESULT_OK){
+        else if (requestCode == REQUEST_CHECK_SETTINGS && resultCode == RESULT_OK){
             getCurrentLocation();
         }
         else if(requestCode==REQUEST_CHECK_SETTINGS && resultCode==RESULT_CANCELED){
             Toast.makeText(this, "Please enable Location settings...!!!", Toast.LENGTH_SHORT).show();
         }
-
+        //If no recent photo
+        else{
+            Toast.makeText(this, R.string.NoPhotoChosen, Toast.LENGTH_LONG).show();
+        }
     }
           
     //Decode the image scale
