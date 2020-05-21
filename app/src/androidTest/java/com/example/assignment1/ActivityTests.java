@@ -101,7 +101,7 @@ public class ActivityTests {
         onView(withId(R.id.mainActivity)).check(matches(isDisplayed()));
 
         // Check if 1 exist
-        onView(withId(R.id.imageView)).check(matches(isDisplayed()));
+        onView(withId(R.id.imageView)).check(matches(not(isDisplayed())));
     }
 
     @Test
@@ -122,7 +122,7 @@ public class ActivityTests {
         onView(withId(R.id.mainActivity)).check(matches(isDisplayed()));
 
         // Check if 1 exist
-        onView(withId(R.id.imageView)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.imageView)).check(matches(isDisplayed()));
     }
 
     private String setFirstImageRandomCaption(MainActivity mainActivity) {
