@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void setLocationListener(){
         getLocation();
-        latitude.setText("latitude "+currentLocation.getLongitude());
+        latitude.setText("latitude "+currentLocation.getLatitude());
         longitude.setText("longitude "+currentLocation.getLongitude());
     }
 
@@ -881,6 +881,7 @@ public class MainActivity extends AppCompatActivity {
                 nextPhotoBtn.setVisibility(View.VISIBLE);
                 previousPhotoBtn.setVisibility(View.VISIBLE);
                 currentImageCaption.setText(result.ExifData.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION));
+                
                 currentTimeStamp.setText("");
                 imageView.setVisibility(View.VISIBLE);
             } catch (Exception ex){
